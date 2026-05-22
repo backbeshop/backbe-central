@@ -47,167 +47,205 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-NAVY      = "#1a2f4a"
+NAVY      = "#111827"
 PINK      = "#c96ba0"
 GOLD      = "#b8860b"
-BG        = "#EDE8DC"
-SIDEBAR   = "#111827"
+BG        = "#F4F5F7"
+SIDEBAR   = "#FFFFFF"
+PURPLE    = "#7C3AED"
 
 init_db()
 
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ── Base ───────────────────────────────────────────────────── */
 html, body, [class*="css"], .stApp, button, input, select, textarea {{
-    font-family: 'DM Sans', -apple-system, sans-serif !important;
+    font-family: 'Inter', -apple-system, sans-serif !important;
 }}
 .stApp {{ background: {BG} !important; }}
 .main .block-container {{
-    padding: 1.8rem 2rem 3rem !important;
+    padding: 1.6rem 2rem 3rem !important;
     background: {BG} !important;
     max-width: 1440px;
 }}
 
-/* ── Sidebar ────────────────────────────────────────────────── */
+/* ── Sidebar — branca estilo SaaS ───────────────────────────── */
 section[data-testid="stSidebar"] > div:first-child,
-div[data-testid="stSidebarContent"] {{
-    background: {SIDEBAR} !important;
-}}
 section[data-testid="stSidebar"],
 div[data-testid="stSidebarContent"] {{
-    background: {SIDEBAR} !important;
+    background: #FFFFFF !important;
+    border-right: 1px solid #E5E7EB !important;
 }}
-/* Hide widget label */
+/* Hide label */
 section[data-testid="stSidebar"] [data-testid="stWidgetLabel"],
 div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] {{
     display: none !important;
 }}
-/* Hide radio circle */
+/* Hide radio circle indicator */
 section[data-testid="stSidebar"] [data-baseweb="radio"] > div:first-child,
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] > div:first-child {{
     display: none !important;
 }}
-/* Radio group */
+/* Radio group column */
 section[data-testid="stSidebar"] [data-baseweb="radio-group"],
 div[data-testid="stSidebarContent"] [data-baseweb="radio-group"] {{
-    gap: 2px !important; display: flex !important; flex-direction: column !important;
+    gap: 1px !important; display: flex !important; flex-direction: column !important;
 }}
-/* Nav item */
+/* Nav item — default */
 section[data-testid="stSidebar"] [data-baseweb="radio"] label,
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] label {{
-    width: 100% !important; padding: 10px 12px 10px 16px !important;
-    border-radius: 10px !important; font-size: 13px !important;
-    font-weight: 500 !important; color: rgba(255,255,255,0.5) !important;
-    cursor: pointer !important; transition: all 0.15s ease !important;
-    display: flex !important; align-items: center !important;
-    margin: 0 !important; user-select: none !important;
+    width: 100% !important;
+    padding: 9px 14px 9px 14px !important;
+    border-radius: 8px !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    color: #6B7280 !important;
+    cursor: pointer !important;
+    transition: all 0.12s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    user-select: none !important;
+    letter-spacing: -0.01em !important;
 }}
 section[data-testid="stSidebar"] [data-baseweb="radio"] label:hover,
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] label:hover {{
-    background: rgba(255,255,255,0.07) !important; color: rgba(255,255,255,0.85) !important;
+    background: #F3F4F6 !important;
+    color: #111827 !important;
 }}
-/* Active nav */
+/* Active nav item */
 section[data-testid="stSidebar"] [data-baseweb="radio"] label:has(input:checked),
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] label:has(input:checked) {{
-    background: {PINK}22 !important; color: white !important;
-    font-weight: 600 !important; border-left: 3px solid {PINK} !important;
+    background: {PURPLE}14 !important;
+    color: {PURPLE} !important;
+    font-weight: 600 !important;
 }}
 /* Hide radio input */
 section[data-testid="stSidebar"] [data-baseweb="radio"] input,
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] input {{
-    position: absolute !important; opacity: 0 !important; width: 0 !important; height: 0 !important;
+    position: absolute !important; opacity: 0 !important;
+    width: 0 !important; height: 0 !important;
 }}
 /* Sidebar button */
 section[data-testid="stSidebar"] .stButton > button,
 div[data-testid="stSidebarContent"] .stButton > button {{
-    background: rgba(255,255,255,0.07) !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
-    color: rgba(255,255,255,0.7) !important;
-    border-radius: 10px !important; font-size: 12px !important;
-    font-weight: 600 !important; transition: all 0.15s !important;
+    background: #F9FAFB !important;
+    border: 1px solid #E5E7EB !important;
+    color: #6B7280 !important;
+    border-radius: 8px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    transition: all 0.12s !important;
 }}
 section[data-testid="stSidebar"] .stButton > button:hover,
 div[data-testid="stSidebarContent"] .stButton > button:hover {{
-    background: rgba(255,255,255,0.13) !important; color: white !important;
+    background: #F3F4F6 !important;
+    color: {PURPLE} !important;
+    border-color: {PURPLE}40 !important;
 }}
 
 /* ── Typography ─────────────────────────────────────────────── */
-h1 {{ color: {NAVY}; font-size: 22px !important; font-weight: 700 !important; margin-bottom: 0 !important; }}
-h2 {{ color: {NAVY}; font-size: 16px !important; font-weight: 600 !important; }}
-h3 {{ color: {NAVY}; font-size: 14px !important; font-weight: 600 !important; }}
+h1 {{ color:{NAVY};font-size:20px !important;font-weight:700 !important;margin-bottom:0 !important; }}
+h2 {{ color:{NAVY};font-size:15px !important;font-weight:600 !important; }}
+h3 {{ color:{NAVY};font-size:13px !important;font-weight:600 !important; }}
 
-/* ── Cards ──────────────────────────────────────────────────── */
-.bb-card {{
-    background: white; border-radius: 20px; padding: 22px 24px;
-    box-shadow: 0 2px 20px rgba(26,47,74,0.06); border: none;
-}}
-.bb-label {{
-    font-size: 10.5px; color: rgba(26,47,74,0.45); font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 5px;
-}}
-.bb-value-lg {{ font-size: 32px; font-weight: 800; color: {NAVY}; line-height: 1.1; letter-spacing:-0.02em; }}
-.bb-value-md {{ font-size: 22px; font-weight: 700; color: {NAVY}; }}
+/* ── Chip tags (weihu style) ─────────────────────────────────── */
+.chip        {{ display:inline-flex;align-items:center;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.01em; }}
+.chip-purple {{ background:#EDE9FE;color:#6D28D9; }}
+.chip-pink   {{ background:#FCE7F3;color:#9D174D; }}
+.chip-orange {{ background:#FFEDD5;color:#9A3412; }}
+.chip-green  {{ background:#DCFCE7;color:#166534; }}
+.chip-blue   {{ background:#DBEAFE;color:#1E40AF; }}
+.chip-yellow {{ background:#FEF9C3;color:#854D0E; }}
+.chip-gray   {{ background:#F3F4F6;color:#6B7280; }}
 
-/* ── KPI bento cards (colorful) ─────────────────────────────── */
-.kpi-yellow {{ background: linear-gradient(135deg,#FEF3C7,#FDE68A); border-radius: 24px; padding: 26px 24px; box-shadow: 0 4px 24px rgba(251,191,36,0.2); }}
-.kpi-green  {{ background: linear-gradient(135deg,#D1FAE5,#6EE7B7); border-radius: 24px; padding: 26px 24px; box-shadow: 0 4px 24px rgba(16,185,129,0.2); }}
-.kpi-pink   {{ background: linear-gradient(135deg,#FCE7F3,#FBCFE8); border-radius: 24px; padding: 26px 24px; box-shadow: 0 4px 24px rgba(201,107,160,0.2); }}
-.kpi-purple {{ background: linear-gradient(135deg,#EDE9FE,#DDD6FE); border-radius: 24px; padding: 26px 24px; box-shadow: 0 4px 24px rgba(139,92,246,0.2); }}
-.kpi-label {{ font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; opacity: 0.55; margin-bottom: 8px; color: #1a1a1a; }}
-.kpi-value {{ font-size: 36px; font-weight: 800; color: #111827; letter-spacing: -0.03em; line-height: 1; }}
-.kpi-sub   {{ font-size: 12.5px; margin-top: 8px; opacity: 0.6; color: #1a1a1a; font-weight: 500; }}
+/* ── KPI cards — brancos com chip de cor no topo ─────────────── */
+.kpi-card {{
+    background: white;
+    border-radius: 16px;
+    padding: 20px 22px 18px;
+    border: 1px solid #F3F4F6;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s;
+}}
+.kpi-card:hover {{ box-shadow: 0 4px 20px rgba(0,0,0,0.09); }}
+.kpi-accent {{ width:36px;height:5px;border-radius:99px;margin-bottom:16px; }}
+.kpi-label  {{ font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px; }}
+.kpi-value  {{ font-size:32px;font-weight:800;color:{NAVY};letter-spacing:-0.03em;line-height:1; }}
+.kpi-sub    {{ font-size:12px;margin-top:6px;color:#9CA3AF;font-weight:400; }}
 
 /* ── White content cards ─────────────────────────────────────── */
 .wcard {{
-    background: white; border-radius: 22px; padding: 24px 26px;
-    box-shadow: 0 2px 20px rgba(26,47,74,0.05); border: none;
+    background: white;
+    border-radius: 16px;
+    padding: 22px 24px;
+    border: 1px solid #F3F4F6;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+}}
+.wcard-title {{
+    font-size: 14px; font-weight: 700; color: {NAVY}; margin-bottom: 4px;
+}}
+.wcard-sub {{
+    font-size: 12px; color: #9CA3AF; font-weight: 400;
 }}
 
+/* ── Task/item cards (weihu style) ───────────────────────────── */
+.task-card {{
+    background: white;
+    border-radius: 14px;
+    padding: 16px 18px;
+    border: 1px solid #F3F4F6;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    margin-bottom: 10px;
+}}
+.task-title {{ font-size:13.5px;font-weight:600;color:{NAVY};line-height:1.4; }}
+.task-note  {{ font-size:12px;color:#9CA3AF;margin-top:4px; }}
+
 /* ── Badges ─────────────────────────────────────────────────── */
-.bb-badge {{ display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:0.01em; }}
+.bb-badge   {{ display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600; }}
 .badge-green  {{ background:#DCFCE7;color:#15803D; }}
 .badge-red    {{ background:#FEE2E2;color:#B91C1C; }}
 .badge-yellow {{ background:#FEF9C3;color:#92400E; }}
 .badge-pink   {{ background:#FCE7F3;color:#9D174D; }}
 .badge-blue   {{ background:#DBEAFE;color:#1E40AF; }}
-.badge-gray   {{ background:#F2F4F7;color:#667085; }}
+.badge-gray   {{ background:#F3F4F6;color:#6B7280; }}
+.badge-purple {{ background:#EDE9FE;color:#6D28D9; }}
 
-/* ── Metrics (fallback) ──────────────────────────────────────── */
-.stMetric {{ background:white;border-radius:16px;padding:16px 20px !important;box-shadow:0 2px 16px rgba(26,47,74,0.05);border:none; }}
-.stMetric label {{ color:#98A2B3 !important;font-size:11px !important;font-weight:600 !important;text-transform:uppercase;letter-spacing:0.07em; }}
-[data-testid="stMetricValue"] {{ color:{NAVY} !important;font-size:26px !important;font-weight:800 !important; }}
+/* ── Metrics ─────────────────────────────────────────────────── */
+.stMetric {{ background:white;border-radius:14px;padding:16px 18px !important;box-shadow:0 1px 6px rgba(0,0,0,0.05);border:1px solid #F3F4F6; }}
+.stMetric label {{ color:#9CA3AF !important;font-size:11px !important;font-weight:600 !important;text-transform:uppercase;letter-spacing:0.08em; }}
+[data-testid="stMetricValue"] {{ color:{NAVY} !important;font-size:24px !important;font-weight:800 !important; }}
 
 /* ── Tabs ────────────────────────────────────────────────────── */
-.stTabs [data-baseweb="tab-list"] {{ background:white;border-radius:12px;padding:4px;border:1px solid #EAECF0;gap:2px; }}
-.stTabs [data-baseweb="tab"] {{ border-radius:9px !important;font-weight:500 !important;font-size:13px !important;padding:6px 14px !important;color:#667085 !important; }}
-.stTabs [aria-selected="true"] {{ background:{NAVY} !important;color:white !important; }}
+.stTabs [data-baseweb="tab-list"] {{ background:#F9FAFB;border-radius:10px;padding:3px;border:1px solid #E5E7EB;gap:1px; }}
+.stTabs [data-baseweb="tab"] {{ border-radius:8px !important;font-weight:500 !important;font-size:13px !important;padding:6px 14px !important;color:#6B7280 !important; }}
+.stTabs [aria-selected="true"] {{ background:{PURPLE} !important;color:white !important; }}
 
 /* ── Buttons ─────────────────────────────────────────────────── */
-.stButton > button {{ border-radius:10px !important;font-weight:600 !important;font-size:13px !important; }}
-.stButton > button[kind="primary"] {{ background:{PINK} !important;color:white !important;border:none !important; }}
-.stButton > button[kind="secondary"] {{ border:1.5px solid #EAECF0 !important;color:{NAVY} !important; }}
+.stButton > button {{ border-radius:8px !important;font-weight:600 !important;font-size:13px !important; }}
+.stButton > button[kind="primary"] {{ background:{PURPLE} !important;color:white !important;border:none !important; }}
+.stButton > button[kind="secondary"] {{ border:1px solid #E5E7EB !important;color:{NAVY} !important;background:#F9FAFB !important; }}
 
 /* ── Misc ────────────────────────────────────────────────────── */
-.stDataFrame {{ border-radius:14px !important;overflow:hidden !important; }}
-.stAlert {{ border-radius:12px !important; }}
-.streamlit-expanderHeader {{ border-radius:10px !important;font-weight:500 !important; }}
-hr {{ border-color:#EAECF0 !important; }}
+.stDataFrame {{ border-radius:12px !important;overflow:hidden !important; }}
+.stAlert {{ border-radius:10px !important; }}
+.streamlit-expanderHeader {{ border-radius:8px !important;font-weight:500 !important; }}
+hr {{ border-color:#F3F4F6 !important; }}
 
 /* ── CRM pills ───────────────────────────────────────────────── */
-.pill-vip  {{ background:#FEF9C3;color:#713F12;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600; }}
-.pill-ativo{{ background:#DCFCE7;color:#15803D;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600; }}
-.pill-reat {{ background:#FED7AA;color:#92400E;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600; }}
-.pill-perd {{ background:#F2F4F7;color:#667085;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600; }}
+.pill-vip  {{ background:#FEF9C3;color:#713F12;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600; }}
+.pill-ativo{{ background:#DCFCE7;color:#15803D;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600; }}
+.pill-reat {{ background:#FFEDD5;color:#9A3412;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600; }}
+.pill-perd {{ background:#F3F4F6;color:#6B7280;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600; }}
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 768px) {{
-  .main .block-container {{ padding: 1rem 0.8rem 2rem !important; }}
-  .kpi-yellow, .kpi-green, .kpi-pink, .kpi-purple {{ padding: 20px 18px; border-radius: 18px; }}
-  .kpi-value {{ font-size: 28px; }}
-  .wcard {{ padding: 18px 16px; border-radius: 16px; }}
-  .bb-card {{ padding: 16px 18px; border-radius: 16px; }}
+  .main .block-container {{ padding: 0.8rem 0.6rem 2rem !important; }}
+  .kpi-card {{ padding: 16px 16px 14px; }}
+  .kpi-value {{ font-size: 26px; }}
+  .wcard {{ padding: 16px 16px; }}
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -215,19 +253,22 @@ hr {{ border-color:#EAECF0 !important; }}
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(f"""
-<div style="padding:8px 4px 20px 4px">
-  <div style="display:flex;align-items:center;gap:12px">
-    <div style="width:42px;height:42px;background:linear-gradient(135deg,{PINK},{GOLD});
-                border-radius:14px;display:flex;align-items:center;justify-content:center;
-                font-size:22px;flex-shrink:0;box-shadow:0 6px 16px rgba(201,107,160,0.45)">⭐</div>
+<div style="padding:6px 0 18px 0">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="width:38px;height:38px;background:{PURPLE};
+                border-radius:10px;display:flex;align-items:center;justify-content:center;
+                font-size:20px;flex-shrink:0">⭐</div>
     <div>
-      <div style="font-size:19px;font-weight:800;color:white;letter-spacing:-0.5px;line-height:1.1">Backbe</div>
-      <div style="font-size:9.5px;color:rgba(255,255,255,0.35);font-weight:700;
-                  text-transform:uppercase;letter-spacing:0.14em;margin-top:2px">Central</div>
+      <div style="font-size:17px;font-weight:800;color:#111827;letter-spacing:-0.5px;line-height:1.1">Backbe</div>
+      <div style="font-size:9px;color:#9CA3AF;font-weight:700;
+                  text-transform:uppercase;letter-spacing:0.15em;margin-top:1px">Central</div>
     </div>
   </div>
 </div>
-<div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:12px"></div>
+<div style="margin-bottom:4px">
+  <div style="font-size:10px;font-weight:700;color:#D1D5DB;text-transform:uppercase;
+              letter-spacing:0.12em;padding:0 6px;margin-bottom:4px">Visão Geral</div>
+</div>
 """, unsafe_allow_html=True)
     pagina = st.radio("Navegação", [
         "📊 Dashboard",
@@ -242,11 +283,15 @@ with st.sidebar:
         "👩 Relatório Mãe",
         "📄 Declaração MEI",
     ], label_visibility="collapsed")
-    st.markdown(f"""<div style="height:1px;background:rgba(255,255,255,0.12);margin:14px 0 14px 0"></div>""", unsafe_allow_html=True)
-    if st.button("🔄 Atualizar NS", use_container_width=True):
+    st.markdown("""
+<div style="height:1px;background:#F3F4F6;margin:12px 0 8px 0"></div>
+<div style="font-size:10px;font-weight:700;color:#D1D5DB;text-transform:uppercase;
+            letter-spacing:0.12em;padding:0 6px;margin-bottom:4px">Configurações</div>
+""", unsafe_allow_html=True)
+    if st.button("🔄 Atualizar Nuvemshop", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
-    st.markdown(f"""<div style="font-size:11px;opacity:0.45;text-align:center;margin-top:6px">atualiza a cada 1h</div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="font-size:11px;color:#D1D5DB;text-align:center;margin-top:5px">dados atualizados a cada 1h</div>""", unsafe_allow_html=True)
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 @st.cache_data(ttl=3600, show_spinner="Buscando pedidos na Nuvemshop...")
@@ -303,36 +348,37 @@ if pagina == "📊 Dashboard":
     hora = hoje.hour
     saudacao = "Bom dia" if hora < 12 else ("Boa tarde" if hora < 18 else "Boa noite")
     st.markdown(f"""
-<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;flex-wrap:wrap;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:center;
+            margin-bottom:24px;flex-wrap:wrap;gap:12px">
   <div>
-    <div style="font-size:12px;color:rgba(26,47,74,0.45);font-weight:600;text-transform:uppercase;
-                letter-spacing:0.1em;margin-bottom:6px">
-      {hoje.strftime('%d')} de {MESES_PT[hoje.month-1]} de {hoje.year}
+    <div style="font-size:13px;color:#9CA3AF;font-weight:500;margin-bottom:2px">
+      {saudacao}, <strong style="color:{NAVY}">Isabela</strong> 👋
     </div>
-    <div style="font-size:38px;font-weight:800;color:{NAVY};letter-spacing:-0.8px;line-height:1.1">
-      {saudacao}, Isabela! <span style="font-size:36px">👋</span>
+    <div style="font-size:22px;font-weight:800;color:{NAVY};letter-spacing:-0.5px;line-height:1.2">
+      Visão Geral do Negócio
     </div>
-    <div style="font-size:14px;color:rgba(26,47,74,0.5);margin-top:6px;font-weight:400">
-      Aqui está o resumo do seu negócio hoje.
+    <div style="font-size:12px;color:#9CA3AF;margin-top:3px">
+      {hoje.strftime('%A, %d')} de {MESES_PT[hoje.month-1]} de {hoje.year}
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-    <div style="background:white;border-radius:14px;padding:9px 18px;
-                display:flex;align-items:center;gap:8px;box-shadow:0 2px 12px rgba(26,47,74,0.06)">
-      <div style="width:8px;height:8px;background:#12B76A;border-radius:50%;flex-shrink:0"></div>
-      <span style="font-size:12px;color:#344054;font-weight:500">Nuvemshop conectada</span>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div style="background:white;border:1px solid #E5E7EB;border-radius:10px;
+                padding:7px 16px;display:flex;align-items:center;gap:7px">
+      <div style="width:7px;height:7px;background:#10B981;border-radius:50%"></div>
+      <span style="font-size:12px;color:#374151;font-weight:500">Nuvemshop conectada</span>
     </div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
-    # ── LINHA 1: 4 KPIs bento coloridos estilo Intelly ───────────────────────
+    # ── LINHA 1: 4 KPIs estilo weihu ─────────────────────────────────────────
     k1, k2, k3, k4 = st.columns(4, gap="medium")
     total_k = total_rev / 1000
 
     with k1:
         st.markdown(f"""
-<div class="kpi-yellow">
+<div class="kpi-card">
+  <div class="kpi-accent" style="background:#F59E0B"></div>
   <div class="kpi-label">💰 Faturamento total</div>
   <div class="kpi-value">R${total_k:.1f}k</div>
   <div class="kpi-sub">histórico Nuvemshop</div>
@@ -341,7 +387,8 @@ if pagina == "📊 Dashboard":
 
     with k2:
         st.markdown(f"""
-<div class="kpi-green">
+<div class="kpi-card">
+  <div class="kpi-accent" style="background:#10B981"></div>
   <div class="kpi-label">📦 Pedidos</div>
   <div class="kpi-value">{total_orders}</div>
   <div class="kpi-sub">ticket médio R${ticket_medio:.0f}</div>
@@ -350,7 +397,8 @@ if pagina == "📊 Dashboard":
 
     with k3:
         st.markdown(f"""
-<div class="kpi-pink">
+<div class="kpi-card">
+  <div class="kpi-accent" style="background:{PINK}"></div>
   <div class="kpi-label">👥 Clientes</div>
   <div class="kpi-value">{len(ns_customers)}</div>
   <div class="kpi-sub">⭐ {segs['VIP']} VIP · {segs['Reativar']} reativar</div>
@@ -358,14 +406,17 @@ if pagina == "📊 Dashboard":
 """, unsafe_allow_html=True)
 
     with k4:
+        delta_bg2   = "#DCFCE7" if delta_pct >= 0 else "#FEE2E2"
+        delta_col2  = "#15803D" if delta_pct >= 0 else "#B91C1C"
         st.markdown(f"""
-<div class="kpi-purple">
+<div class="kpi-card">
+  <div class="kpi-accent" style="background:{PURPLE}"></div>
   <div class="kpi-label">📈 Este mês</div>
   <div class="kpi-value">R${rev_atual/1000:.1f}k</div>
-  <div style="margin-top:8px;display:flex;align-items:center;gap:6px">
-    <span style="background:rgba(0,0,0,0.12);color:#111827;padding:2px 9px;border-radius:99px;
-                 font-size:11px;font-weight:700">{delta_icon}{abs(delta_pct):.1f}%</span>
-    <span style="font-size:12px;opacity:0.55;color:#111827;font-weight:500">vs anterior</span>
+  <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
+    <span style="background:{delta_bg2};color:{delta_col2};padding:2px 8px;
+                 border-radius:6px;font-size:11px;font-weight:700">{delta_icon}{abs(delta_pct):.1f}%</span>
+    <span class="kpi-sub" style="margin-top:0">vs anterior</span>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -377,14 +428,14 @@ if pagina == "📊 Dashboard":
 
     with chart_col:
         st.markdown(f"""
-<div class="wcard" style="padding-bottom:8px">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+<div class="wcard" style="padding-bottom:6px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
     <div>
-      <div style="font-size:15px;font-weight:700;color:{NAVY}">Faturamento mensal</div>
-      <div style="font-size:12px;color:rgba(26,47,74,0.4);margin-top:2px">Receita bruta por mês</div>
+      <div class="wcard-title">Faturamento mensal</div>
+      <div class="wcard-sub">Receita bruta por mês</div>
     </div>
-    <span style="background:#EDE8DC;color:#344054;padding:4px 12px;border-radius:8px;
-                 font-size:11px;font-weight:600">Todos os meses</span>
+    <span style="background:#F3F4F6;color:#6B7280;padding:4px 12px;border-radius:8px;
+                 font-size:11px;font-weight:600;border:1px solid #E5E7EB">Todos os meses</span>
   </div>
 """, unsafe_allow_html=True)
         if ns_monthly:
@@ -424,44 +475,44 @@ if pagina == "📊 Dashboard":
 
     with alert_col:
         st.markdown(f"""
-<div class="wcard" style="display:flex;flex-direction:column;gap:0">
+<div class="wcard" style="display:flex;flex-direction:column;gap:0;height:100%">
 
-  <div style="font-size:14px;font-weight:700;color:{NAVY};margin-bottom:16px">Atenção necessária</div>
-
-  <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #F2F4F7">
-    <div style="width:42px;height:42px;background:#FDF0F8;border-radius:12px;flex-shrink:0;
-                display:flex;align-items:center;justify-content:center;font-size:20px">📩</div>
-    <div style="flex:1">
-      <div style="font-size:10.5px;color:#98A2B3;font-weight:600;text-transform:uppercase;letter-spacing:0.07em">Para Reativar</div>
-      <div style="font-size:24px;font-weight:800;color:{NAVY};line-height:1.2;margin-top:2px">{segs['Reativar']}</div>
-      <div style="font-size:11px;color:#98A2B3;margin-top:1px">clientes 60–180 dias</div>
-    </div>
-    <div style="background:#FDF0F8;color:{PINK};padding:3px 10px;border-radius:8px;
-                font-size:11px;font-weight:700;white-space:nowrap">reativar</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div class="wcard-title">Atenção</div>
+    <span style="background:#EDE9FE;color:{PURPLE};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600">3 itens</span>
   </div>
 
-  <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #F2F4F7">
-    <div style="width:42px;height:42px;background:#FFFAEB;border-radius:12px;flex-shrink:0;
-                display:flex;align-items:center;justify-content:center;font-size:20px">🏭</div>
+  <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F3F4F6">
+    <div style="width:38px;height:38px;background:#FCE7F3;border-radius:10px;flex-shrink:0;
+                display:flex;align-items:center;justify-content:center;font-size:18px">📩</div>
     <div style="flex:1">
-      <div style="font-size:10.5px;color:#98A2B3;font-weight:600;text-transform:uppercase;letter-spacing:0.07em">Em Produção</div>
-      <div style="font-size:24px;font-weight:800;color:{NAVY};line-height:1.2;margin-top:2px">{total_em_prod}</div>
-      <div style="font-size:11px;color:#98A2B3;margin-top:1px">{n_urgentes} urgente(s) na fila</div>
+      <div style="font-size:11px;color:#9CA3AF;font-weight:600;text-transform:uppercase;letter-spacing:0.07em">Para Reativar</div>
+      <div style="font-size:22px;font-weight:800;color:{NAVY};line-height:1.2;margin-top:1px">{segs['Reativar']}</div>
+      <div style="font-size:11px;color:#9CA3AF">clientes 60–180 dias</div>
     </div>
-    <div style="background:#FFFAEB;color:{GOLD};padding:3px 10px;border-radius:8px;
-                font-size:11px;font-weight:700;white-space:nowrap">ordens</div>
+    <span class="chip chip-pink">reativar</span>
   </div>
 
-  <div style="display:flex;align-items:center;gap:14px;padding:14px 0 0">
-    <div style="width:42px;height:42px;background:#ECFDF3;border-radius:12px;flex-shrink:0;
-                display:flex;align-items:center;justify-content:center;font-size:20px">⭐</div>
+  <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F3F4F6">
+    <div style="width:38px;height:38px;background:#FEF9C3;border-radius:10px;flex-shrink:0;
+                display:flex;align-items:center;justify-content:center;font-size:18px">🏭</div>
     <div style="flex:1">
-      <div style="font-size:10.5px;color:#98A2B3;font-weight:600;text-transform:uppercase;letter-spacing:0.07em">Clientes VIP</div>
-      <div style="font-size:24px;font-weight:800;color:{NAVY};line-height:1.2;margin-top:2px">{segs['VIP']}</div>
-      <div style="font-size:11px;color:#98A2B3;margin-top:1px">3+ pedidos ou R$500+</div>
+      <div style="font-size:11px;color:#9CA3AF;font-weight:600;text-transform:uppercase;letter-spacing:0.07em">Em Produção</div>
+      <div style="font-size:22px;font-weight:800;color:{NAVY};line-height:1.2;margin-top:1px">{total_em_prod}</div>
+      <div style="font-size:11px;color:#9CA3AF">{n_urgentes} urgente(s) na fila</div>
     </div>
-    <div style="background:#ECFDF3;color:#16A34A;padding:3px 10px;border-radius:8px;
-                font-size:11px;font-weight:700;white-space:nowrap">VIP</div>
+    <span class="chip chip-yellow">ordens</span>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;padding:12px 0 0">
+    <div style="width:38px;height:38px;background:#DCFCE7;border-radius:10px;flex-shrink:0;
+                display:flex;align-items:center;justify-content:center;font-size:18px">⭐</div>
+    <div style="flex:1">
+      <div style="font-size:11px;color:#9CA3AF;font-weight:600;text-transform:uppercase;letter-spacing:0.07em">Clientes VIP</div>
+      <div style="font-size:22px;font-weight:800;color:{NAVY};line-height:1.2;margin-top:1px">{segs['VIP']}</div>
+      <div style="font-size:11px;color:#9CA3AF">3+ pedidos ou R$500+</div>
+    </div>
+    <span class="chip chip-green">VIP</span>
   </div>
 
 </div>
@@ -473,10 +524,10 @@ if pagina == "📊 Dashboard":
 
     with b1:
         st.markdown(f"""
-<div class="bb-card">
+<div class="wcard">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-    <span style="font-size:15px;font-weight:700;color:{NAVY}">🏆 Top Produtos</span>
-    <span class="bb-badge badge-gray">{len(ns_products)} produtos vendidos</span>
+    <div class="wcard-title">🏆 Top Produtos</div>
+    <span class="chip chip-gray">{len(ns_products)} produtos</span>
   </div>
 """, unsafe_allow_html=True)
         for i, p in enumerate(ns_products[:8]):
