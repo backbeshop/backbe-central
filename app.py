@@ -1702,10 +1702,10 @@ elif pagina == "🧶 Produtos":
 
             k1, k2, k3, k4 = st.columns(4)
             k1.metric("Total de produtos", len(prods_show))
-            avg_cmv = sum(p["custo_total"] for p in prods_show) / len(prods_show) if prods_show else 0
-            prods_com_venda = [p for p in prods_show if p["preco_venda"]]
-            avg_venda = sum(p["preco_venda"] for p in prods_com_venda) / len(prods_com_venda) if prods_com_venda else 0
-            markups = [p["preco_venda"] / p["custo_total"] for p in prods_com_venda if p["custo_total"]]
+            avg_cmv = sum(float(p["custo_total"] or 0) for p in prods_show) / len(prods_show) if prods_show else 0
+            prods_com_venda = [p for p in prods_show if p.get("preco_venda")]
+            avg_venda = sum(float(p["preco_venda"] or 0) for p in prods_com_venda) / len(prods_com_venda) if prods_com_venda else 0
+            markups = [float(p["preco_venda"]) / float(p["custo_total"]) for p in prods_com_venda if p.get("custo_total")]
             avg_mk = sum(markups) / len(markups) if markups else 0
             k2.metric("CMV médio", f"R${avg_cmv:.2f}")
             k3.metric("Preço médio de venda", f"R${avg_venda:.2f}")
