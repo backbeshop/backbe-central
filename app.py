@@ -846,6 +846,7 @@ elif pagina == "🧵 Tecidos":
                 df_tec,
                 use_container_width=True,
                 hide_index=True,
+                height=min(40 + 36 * len(df_tec), 3000),
                 disabled=["ID"],
                 column_config={
                     "R$/kg": st.column_config.NumberColumn(format="R$%.2f", step=0.5),
@@ -1104,6 +1105,7 @@ elif pagina == "🏭 Ordens de Produção":
             }),
             use_container_width=True,
             hide_index=True,
+            height=min(40 + 36 * len(precos), 1200),
             disabled=["ID", "Terceirizada (R$)"],
             column_config={
                 "Mãe (R$)": st.column_config.NumberColumn(format="R$%.2f"),
@@ -1575,6 +1577,7 @@ elif pagina == "📄 Declaração MEI":
                         df_tx.drop(columns=["_id"]),
                         use_container_width=True,
                         hide_index=True,
+                        height=min(40 + 36 * len(df_tx), 5000),
                         column_config={
                             "Incluir": st.column_config.CheckboxColumn("Incluir na receita"),
                             "Valor (R$)": st.column_config.NumberColumn(format="R$%.2f"),
@@ -1734,6 +1737,7 @@ elif pagina == "🧶 Produtos":
                 df_prod,
                 use_container_width=True,
                 hide_index=True,
+                height=min(40 + 36 * len(df_prod), 5000),  # dinâmico — a página rola, não a tabela
                 disabled=["ID", "CMV R$", "Markup"],
                 column_config={
                     "Tecido R$":        st.column_config.NumberColumn(format="R$%.2f", step=0.5),
@@ -1932,6 +1936,7 @@ elif pagina == "🔩 Acabamentos":
                         df_cat,
                         use_container_width=True,
                         hide_index=True,
+                        height=min(40 + 36 * len(df_cat), 2000),
                         disabled=["ID"],
                         column_config={
                             "Preço R$": st.column_config.NumberColumn(format="R$%.2f", step=0.1),
@@ -2035,6 +2040,7 @@ elif pagina == "👩 Relatório Mãe":
                 df_it,
                 use_container_width=True,
                 hide_index=True,
+                height=min(40 + 36 * len(df_it), 2000),
                 disabled=["ID", "Subtotal R$"],
                 column_config={
                     "Preço/peça R$": st.column_config.NumberColumn(format="R$%.2f", step=0.5),
