@@ -1372,7 +1372,10 @@ elif pagina == "💳 Financeiro":
     # ── selecionar ano ────────────────────────────────────────────────────────
     hcol1, hcol2 = st.columns([3, 1])
     hcol1.title("💳 Controle Financeiro")
-    ano_fin = hcol2.selectbox("Ano", list(range(2024, 2028)), index=1, key="fin_ano")
+    _anos_disp = list(range(2024, 2029))
+    _ano_atual = datetime.now().year
+    _idx_ano   = _anos_disp.index(_ano_atual) if _ano_atual in _anos_disp else 2
+    ano_fin = hcol2.selectbox("Ano", _anos_disp, index=_idx_ano, key="fin_ano")
 
     # ── garante 12 registros ─────────────────────────────────────────────────
     for m in range(1, 13):

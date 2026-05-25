@@ -272,6 +272,27 @@ def init_db():
         except Exception:
             pass
 
+    # DRE — seed 2026 (Jan–Abr) — só preenche se o mês ainda estiver zerado
+    _DRE_SEED_2026 = [
+        # mes, fat_manual, vendas, alug1,   alug2,   en1,   en2,   in1,    in2
+        (1,  6631.00, 32, 850.12,   0.00,  72.00,  0.00, 104.49,  0.00),
+        (2,  6778.03, 34, 985.96, 478.68,  89.21,  0.00, 104.49,  0.00),
+        (3, 10106.00, 49, 919.62, 853.93,  93.46, 13.06,  67.49,  0.00),
+        (4,  6271.72, 32, 919.62, 963.19,  48.03, 27.70,  74.99, 89.99),
+    ]
+    for mes, fat, vnd, al1, al2, en1, en2, in1, in2 in _DRE_SEED_2026:
+        c.execute("INSERT OR IGNORE INTO dre_custos (ano, mes) VALUES (2026, ?)", (mes,))
+        c.execute("""
+            UPDATE dre_custos SET
+                faturamento_manual=?, vendas_manual=?,
+                aluguel_sala1=?, aluguel_sala2=?,
+                energia_sala1=?, energia_sala2=?,
+                internet_sala1=?, internet_sala2=?,
+                comissao_mae_pct=2.0, comissao_bella_pct=10.0
+            WHERE ano=2026 AND mes=?
+              AND (aluguel_sala1 IS NULL OR aluguel_sala1=0)
+        """, (fat, vnd, al1, al2, en1, en2, in1, in2, mes))
+
     # Costureiras padrão
     c.execute("SELECT COUNT(*) FROM costureiras")
     if c.fetchone()[0] == 0:
