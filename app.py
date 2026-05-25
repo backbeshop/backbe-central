@@ -64,19 +64,21 @@ st.markdown(f"""
 html, body, [class*="css"], .stApp, button, input, select, textarea {{
     font-family: 'DM Sans', -apple-system, sans-serif !important;
 }}
-.stApp {{ background: #ECEEF3 !important; }}
+.stApp {{ background: #F4F6FB !important; }}
 .main .block-container {{
     padding: 1.8rem 2.2rem 3rem !important;
-    background: #ECEEF3 !important;
+    background: #F4F6FB !important;
     max-width: 1440px;
 }}
 
-/* ── Sidebar dark navy ──────────────────────────────────────── */
+/* ── Sidebar — glassmorphism claro ──────────────────────────── */
 section[data-testid="stSidebar"] > div:first-child,
 section[data-testid="stSidebar"],
 div[data-testid="stSidebarContent"] {{
-    background: {NAVY} !important;
-    border-right: 0 !important;
+    background: rgba(255,255,255,0.78) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border-right: 1px solid rgba(201,107,160,0.10) !important;
 }}
 section[data-testid="stSidebar"] [data-testid="stWidgetLabel"],
 div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] {{
@@ -93,11 +95,11 @@ div[data-testid="stSidebarContent"] [data-baseweb="radio-group"] {{
 section[data-testid="stSidebar"] [data-baseweb="radio"] label,
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] label {{
     width: 100% !important;
-    padding: 10px 16px 10px 14px !important;
+    padding: 10px 14px !important;
     border-radius: 10px !important;
     font-size: 13.5px !important;
     font-weight: 500 !important;
-    color: rgba(255,255,255,0.60) !important;
+    color: #6B7280 !important;
     cursor: pointer !important;
     transition: all 0.14s ease !important;
     display: flex !important;
@@ -107,13 +109,13 @@ div[data-testid="stSidebarContent"] [data-baseweb="radio"] label {{
 }}
 section[data-testid="stSidebar"] [data-baseweb="radio"] label:hover,
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] label:hover {{
-    background: rgba(255,255,255,0.08) !important;
-    color: white !important;
+    background: #FDF2F8 !important;
+    color: {PINK} !important;
 }}
 section[data-testid="stSidebar"] [data-baseweb="radio"] label:has(input:checked),
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] label:has(input:checked) {{
-    background: {PINK} !important;
-    color: white !important;
+    background: #FDF2F8 !important;
+    color: {PINK} !important;
     font-weight: 700 !important;
 }}
 section[data-testid="stSidebar"] [data-baseweb="radio"] input,
@@ -123,18 +125,17 @@ div[data-testid="stSidebarContent"] [data-baseweb="radio"] input {{
 }}
 section[data-testid="stSidebar"] .stButton > button,
 div[data-testid="stSidebarContent"] .stButton > button {{
-    background: rgba(255,255,255,0.10) !important;
-    border: 1px solid rgba(255,255,255,0.15) !important;
-    color: rgba(255,255,255,0.75) !important;
+    background: #FDF2F8 !important;
+    border: 1px solid #F9D2E9 !important;
+    color: {PINK} !important;
     border-radius: 8px !important;
     font-size: 12.5px !important;
     font-weight: 600 !important;
 }}
 section[data-testid="stSidebar"] .stButton > button:hover,
 div[data-testid="stSidebarContent"] .stButton > button:hover {{
-    background: rgba(255,255,255,0.18) !important;
-    color: white !important;
-    border-color: rgba(255,255,255,0.3) !important;
+    background: #FCE7F3 !important;
+    border-color: {PINK} !important;
 }}
 
 /* ── Typography ─────────────────────────────────────────────── */
@@ -143,46 +144,60 @@ h1 {{ color:{NAVY};font-size:22px !important;font-weight:800 !important;
 h2 {{ color:{NAVY};font-size:16px !important;font-weight:700 !important; }}
 h3 {{ color:{NAVY};font-size:14px !important;font-weight:600 !important; }}
 
-/* ── KPI Card colorido ──────────────────────────────────────── */
+/* ── KPI Card pastel ────────────────────────────────────────── */
 .kcard {{
-    border-radius: 18px;
+    border-radius: 20px;
     padding: 22px 24px 20px;
-    border: 0;
+    border: 1.5px solid transparent;
     position: relative;
     overflow: hidden;
-    min-height: 130px;
+    min-height: 128px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s, transform 0.15s;
 }}
-.kcard::before {{
-    content: "";
-    position: absolute;
-    top: -30px; right: -30px;
-    width: 100px; height: 100px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.12);
+.kcard:hover {{
+    box-shadow: 0 8px 28px rgba(0,0,0,0.10);
+    transform: translateY(-1px);
 }}
 .kcard-label {{
-    font-size: 11px;font-weight:700;text-transform:uppercase;
-    letter-spacing:0.09em;opacity:0.75;margin-bottom:8px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.09em; margin-bottom: 8px;
 }}
 .kcard-val {{
-    font-size: 34px;font-weight:800;letter-spacing:-1.5px;line-height:1;
+    font-size: 34px; font-weight: 800; letter-spacing: -1.5px; line-height: 1;
+    color: {NAVY};
 }}
 .kcard-sub {{
-    font-size: 12px;margin-top:10px;opacity:0.70;font-weight:500;
+    font-size: 12px; margin-top: 10px; font-weight: 500; color: #6B7280;
 }}
 .kcard-delta {{
-    display:inline-flex;align-items:center;margin-top:10px;
-    background:rgba(255,255,255,0.25);border-radius:6px;
-    padding:3px 8px;font-size:11px;font-weight:700;
+    display: inline-flex; align-items: center; margin-top: 10px;
+    border-radius: 8px; padding: 3px 10px;
+    font-size: 11px; font-weight: 700;
+}}
+
+/* ── Progress bar de meta (sobre fundo pastel) ──────────────── */
+.goal-bar-wrap {{ margin-top: 14px; }}
+.goal-bar-header {{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:11px; font-weight:600; margin-bottom:6px; color:#374151;
+}}
+.goal-bar-bg {{
+    background: rgba(0,0,0,0.08);
+    border-radius: 99px; height: 7px;
+}}
+.goal-bar-fill {{
+    border-radius: 99px; height: 7px;
+    transition: width 0.6s ease;
 }}
 
 /* ── White content card ─────────────────────────────────────── */
 .wcard {{
-    background: white;
-    border-radius: 18px;
+    background: rgba(255,255,255,0.90);
+    border-radius: 20px;
     padding: 22px 24px;
-    border: 0;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid rgba(255,255,255,0.95);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.05);
 }}
 .wcard-title {{
     font-size: 15px; font-weight: 700; color: {NAVY}; margin-bottom: 4px;
@@ -193,34 +208,17 @@ h3 {{ color:{NAVY};font-size:14px !important;font-weight:600 !important; }}
 
 /* ── KPI card branco legado ─────────────────────────────────── */
 .kpi-card {{
-    background: white; border-radius: 18px; padding: 20px 22px 18px;
-    border: 0; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    transition: box-shadow 0.2s;
+    background: rgba(255,255,255,0.90); border-radius: 20px; padding: 20px 22px 18px;
+    border: 1px solid rgba(255,255,255,0.95);
+    box-shadow: 0 2px 14px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s, transform 0.15s;
 }}
-.kpi-card:hover {{ box-shadow: 0 6px 24px rgba(0,0,0,0.10); }}
-.kpi-accent {{ width:40px;height:5px;border-radius:99px;margin-bottom:16px; }}
-.kpi-label  {{ font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;
-               letter-spacing:0.09em;margin-bottom:4px; }}
-.kpi-value  {{ font-size:34px;font-weight:800;color:{NAVY};letter-spacing:-0.04em;line-height:1; }}
-.kpi-sub    {{ font-size:12px;margin-top:6px;color:#9CA3AF;font-weight:400; }}
-
-/* ── Progress bar de meta ───────────────────────────────────── */
-.goal-bar-wrap {{
-    margin-top: 14px;
-}}
-.goal-bar-header {{
-    display:flex;justify-content:space-between;align-items:center;
-    font-size:11px;font-weight:600;margin-bottom:6px;
-}}
-.goal-bar-bg {{
-    background: rgba(0,0,0,0.10);
-    border-radius: 99px; height: 7px;
-}}
-.goal-bar-fill {{
-    border-radius: 99px; height: 7px;
-    background: rgba(255,255,255,0.85);
-    transition: width 0.6s ease;
-}}
+.kpi-card:hover {{ box-shadow: 0 8px 24px rgba(0,0,0,0.09); transform: translateY(-1px); }}
+.kpi-accent {{ width:40px; height:5px; border-radius:99px; margin-bottom:16px; }}
+.kpi-label  {{ font-size:11px; font-weight:700; color:#9CA3AF; text-transform:uppercase;
+               letter-spacing:0.09em; margin-bottom:4px; }}
+.kpi-value  {{ font-size:34px; font-weight:800; color:{NAVY}; letter-spacing:-0.04em; line-height:1; }}
+.kpi-sub    {{ font-size:12px; margin-top:6px; color:#9CA3AF; font-weight:400; }}
 
 /* ── Progress bar branca (para cards brancos) ───────────────── */
 .pbar-bg {{
@@ -337,25 +335,26 @@ hr {{ border-color:#E8EAF0 !important; }}
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(f"""
-<div style="padding:8px 4px 22px 4px">
+<div style="padding:10px 4px 20px 4px">
   <div style="display:flex;align-items:center;gap:10px">
     <div style="width:40px;height:40px;
                 background:linear-gradient(135deg,{PINK},{GOLD});
                 border-radius:12px;display:flex;align-items:center;
-                justify-content:center;flex-shrink:0">
+                justify-content:center;flex-shrink:0;
+                box-shadow:0 4px 14px rgba(201,107,160,0.30)">
       <span style="font-size:18px;color:white;font-weight:900">B</span>
     </div>
     <div>
-      <div style="font-size:18px;font-weight:800;color:white;
+      <div style="font-size:18px;font-weight:800;color:{NAVY};
                   letter-spacing:-0.5px;line-height:1.1">Backbe</div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.45);font-weight:700;
+      <div style="font-size:9px;color:#9CA3AF;font-weight:700;
                   text-transform:uppercase;letter-spacing:0.18em;margin-top:1px">CENTRAL</div>
     </div>
   </div>
 </div>
-<div style="font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.35);
-            text-transform:uppercase;letter-spacing:0.14em;padding:0 6px;
-            margin-bottom:6px">Visao Geral</div>
+<div style="font-size:9.5px;font-weight:700;color:#D1D5DB;
+            text-transform:uppercase;letter-spacing:0.14em;
+            padding:0 6px;margin-bottom:5px">Visao Geral</div>
 """, unsafe_allow_html=True)
     pagina = st.radio("nav", [
         "◆ Dashboard",
@@ -372,15 +371,15 @@ with st.sidebar:
         "⊛ Declaracao MEI",
     ], label_visibility="collapsed")
     st.markdown("""
-<div style="height:1px;background:rgba(255,255,255,0.10);margin:12px 0 10px 0"></div>
-<div style="font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.35);
-            text-transform:uppercase;letter-spacing:0.14em;padding:0 6px;
-            margin-bottom:6px">Configuracoes</div>
+<div style="height:1px;background:#F3F4F6;margin:12px 0 10px 0"></div>
+<div style="font-size:9.5px;font-weight:700;color:#D1D5DB;
+            text-transform:uppercase;letter-spacing:0.14em;
+            padding:0 6px;margin-bottom:5px">Configuracoes</div>
 """, unsafe_allow_html=True)
     if st.button("↺  Atualizar Nuvemshop", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
-    st.markdown("""<div style="font-size:11px;color:rgba(255,255,255,0.30);
+    st.markdown("""<div style="font-size:11px;color:#9CA3AF;
                                text-align:center;margin-top:6px">dados atualizados a cada 1h</div>""",
                 unsafe_allow_html=True)
 
@@ -406,14 +405,41 @@ with st.spinner("Conectando à Nuvemshop..."):
 # ══════════════════════════════════════════════════════════════════════════════
 if pagina == "◆ Dashboard":
 
-    # ── métricas base ────────────────────────────────────────────────────────
+    # ── dados base ───────────────────────────────────────────────────────────
+    ANO_DASH = 2026
+    MESES_NOME_D = ["Janeiro","Fevereiro","Marco","Abril","Maio","Junho",
+                    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]
+    MESES_ABR_D  = ["Jan","Fev","Mar","Abr","Mai","Jun",
+                    "Jul","Ago","Set","Out","Nov","Dez"]
+
+    hoje   = datetime.now()
+    mes_at = hoje.month
+
+    # receita por mês somente 2026
+    rev_2026 = {}
+    ped_2026 = {}
+    for m_key, d in ns_monthly.items():
+        try:
+            yr, mn = int(m_key[:4]), int(m_key[5:7])
+        except Exception:
+            continue
+        if yr == ANO_DASH:
+            rev_2026[mn] = d["revenue"]
+            ped_2026[mn] = d.get("orders", 0)
+
     total_rev    = sum(d["revenue"] for d in ns_monthly.values())
     total_orders = len(ns_orders)
     ticket_medio = total_rev / total_orders if total_orders else 0
     months_sorted = sorted(ns_monthly.keys())
-    rev_atual = ns_monthly.get(months_sorted[-1], {}).get("revenue", 0) if months_sorted else 0
-    rev_ant   = ns_monthly.get(months_sorted[-2], {}).get("revenue", 0) if len(months_sorted) > 1 else 0
-    delta_pct = ((rev_atual - rev_ant) / rev_ant * 100) if rev_ant else 0
+
+    rev_atual = rev_2026.get(mes_at, 0)
+    rev_ant   = rev_2026.get(mes_at - 1, 0)
+    ped_atual = ped_2026.get(mes_at, 0)
+    fat_ano   = sum(rev_2026.values())
+    ped_ano   = sum(ped_2026.values())
+    ticket_ano = fat_ano / ped_ano if ped_ano else 0
+
+    delta_pct   = ((rev_atual - rev_ant) / rev_ant * 100) if rev_ant else 0
     delta_icon  = "↑" if delta_pct >= 0 else "↓"
     delta_color = "#16A34A" if delta_pct >= 0 else "#DC2626"
 
@@ -484,144 +510,132 @@ if pagina == "◆ Dashboard":
 </div>
 """, unsafe_allow_html=True)
 
-    # ── LINHA 1: 4 KPI cards coloridos ───────────────────────────────────────
-    k1, k2, k3, k4 = st.columns(4, gap="medium")
-
-    def _pbar_goal(label, pct, color="rgba(255,255,255,0.85)"):
+    # ── tabs mensal / anual ───────────────────────────────────────────────────
+    def _pbar_goal(label, pct, color=PINK):
         w = max(4, round(pct))
-        return f"""
-<div class="goal-bar-wrap">
-  <div class="goal-bar-header">
-    <span>{label}</span>
-    <span>{pct:.0f}%</span>
-  </div>
-  <div class="goal-bar-bg">
-    <div class="goal-bar-fill" style="width:{w}%;background:{color}"></div>
-  </div>
+        return f"""<div class="goal-bar-wrap">
+  <div class="goal-bar-header"><span>{label}</span><span>{pct:.0f}%</span></div>
+  <div class="goal-bar-bg"><div class="goal-bar-fill" style="width:{w}%;background:{color}"></div></div>
 </div>"""
 
-    with k1:
-        st.markdown(f"""
-<div class="kcard" style="background:linear-gradient(135deg,#C96BA0,#a84f87);color:white">
-  <div class="kcard-label">Faturamento — Mes Atual</div>
+    tab_mensal, tab_anual = st.tabs([
+        f"◉  Mensal — {MESES_NOME_D[mes_at-1]} {ANO_DASH}",
+        f"↗  Anual — {ANO_DASH}"
+    ])
+
+    # ══ TAB MENSAL ════════════════════════════════════════════════════════════
+    with tab_mensal:
+
+        k1, k2, k3, k4 = st.columns(4, gap="medium")
+
+        with k1:
+            st.markdown(f"""
+<div class="kcard" style="background:#FDF2F8;border-color:#F9D2E9">
+  <div class="kcard-label" style="color:{PINK}">Faturamento — {MESES_NOME_D[mes_at-1]}</div>
   <div class="kcard-val">R${rev_atual/1000:.1f}k</div>
   <div class="kcard-sub">Meta R${meta_fat/1000:.0f}k</div>
-  {_pbar_goal(f"R${rev_atual:,.0f} de R${meta_fat:,.0f}", prog_fat)}
-  <div class="kcard-delta">{delta_icon} {abs(delta_pct):.1f}% vs anterior</div>
-</div>
-""", unsafe_allow_html=True)
+  {_pbar_goal(f"R${rev_atual:,.0f} de R${meta_fat:,.0f}", prog_fat, PINK)}
+  <div class="kcard-delta" style="background:#FCE7F3;color:{PINK}">{delta_icon} {abs(delta_pct):.1f}% vs mes ant.</div>
+</div>""", unsafe_allow_html=True)
 
-    with k2:
-        st.markdown(f"""
-<div class="kcard" style="background:linear-gradient(135deg,#1a2f4a,#2d4d75);color:white">
-  <div class="kcard-label">Pedidos — Total Historico</div>
-  <div class="kcard-val">{total_orders}</div>
-  <div class="kcard-sub">Meta mensal: {int(meta_ped)} pedidos</div>
-  {_pbar_goal(f"{ped_mes} de {int(meta_ped)} este mes", prog_ped)}
-  <div class="kcard-delta">ticket medio R${ticket_medio:.0f}</div>
-</div>
-""", unsafe_allow_html=True)
+        with k2:
+            st.markdown(f"""
+<div class="kcard" style="background:#EFF6FF;border-color:#BFDBFE">
+  <div class="kcard-label" style="color:#2563EB">Pedidos — {MESES_NOME_D[mes_at-1]}</div>
+  <div class="kcard-val">{ped_atual}</div>
+  <div class="kcard-sub">Meta: {int(meta_ped)} pedidos</div>
+  {_pbar_goal(f"{ped_atual} de {int(meta_ped)}", prog_ped, "#2563EB")}
+  <div class="kcard-delta" style="background:#DBEAFE;color:#1D4ED8">ticket R${ticket_medio:.0f}</div>
+</div>""", unsafe_allow_html=True)
 
-    with k3:
-        st.markdown(f"""
-<div class="kcard" style="background:linear-gradient(135deg,#b8860b,#d4a017);color:white">
-  <div class="kcard-label">Clientes VIP</div>
+        with k3:
+            st.markdown(f"""
+<div class="kcard" style="background:#FEFCE8;border-color:#FEF08A">
+  <div class="kcard-label" style="color:#92400E">Clientes VIP</div>
   <div class="kcard-val">{segs['VIP']}</div>
-  <div class="kcard-sub">Meta: {int(meta_vip)} clientes VIP</div>
-  {_pbar_goal(f"{segs['VIP']} de {int(meta_vip)}", prog_vip)}
-  <div class="kcard-delta">{segs['Reativar']} para reativar</div>
-</div>
-""", unsafe_allow_html=True)
+  <div class="kcard-sub">Meta: {int(meta_vip)} VIPs</div>
+  {_pbar_goal(f"{segs['VIP']} de {int(meta_vip)}", prog_vip, GOLD)}
+  <div class="kcard-delta" style="background:#FEF9C3;color:#92400E">{segs['Reativar']} para reativar</div>
+</div>""", unsafe_allow_html=True)
 
-    with k4:
-        st.markdown(f"""
-<div class="kcard" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white">
-  <div class="kcard-label">Ticket Medio</div>
+        with k4:
+            st.markdown(f"""
+<div class="kcard" style="background:#F0FDFA;border-color:#99F6E4">
+  <div class="kcard-label" style="color:#0F766E">Ticket Medio</div>
   <div class="kcard-val">R${ticket_medio:.0f}</div>
   <div class="kcard-sub">Meta: R${meta_ticket:.0f}</div>
-  {_pbar_goal(f"R${ticket_medio:.0f} de R${meta_ticket:.0f}", prog_ticket)}
-  <div class="kcard-delta">{len(ns_customers)} clientes total</div>
-</div>
-""", unsafe_allow_html=True)
+  {_pbar_goal(f"R${ticket_medio:.0f} de R${meta_ticket:.0f}", prog_ticket, "#0F766E")}
+  <div class="kcard-delta" style="background:#CCFBF1;color:#0F766E">{len(ns_customers)} clientes</div>
+</div>""", unsafe_allow_html=True)
 
-    st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
 
-    # ── LINHA 2: gráfico faturamento + alertas ────────────────────────────────
-    chart_col, alert_col = st.columns([6.5, 3.5], gap="large")
+        # ── gráfico 2026 + alertas ────────────────────────────────────────────
+        chart_col, alert_col = st.columns([6.5, 3.5], gap="large")
 
-    with chart_col:
-        st.markdown(f"""
+        with chart_col:
+            months_2026 = sorted([m for m in ns_monthly if m.startswith("2026")])
+            st.markdown(f"""
 <div class="wcard" style="padding-bottom:6px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
     <div>
-      <div class="wcard-title">Faturamento mensal</div>
-      <div class="wcard-sub">Receita bruta — todos os meses</div>
+      <div class="wcard-title">Faturamento — {ANO_DASH}</div>
+      <div class="wcard-sub">Receita bruta mensal · ano atual</div>
     </div>
     <span style="background:#F0F2F5;color:#6B7280;padding:5px 14px;
                  border-radius:10px;font-size:11px;font-weight:700">
-      R${total_rev/1000:.1f}k total
+      R${fat_ano/1000:.1f}k acumulado
     </span>
   </div>
 """, unsafe_allow_html=True)
-        if ns_monthly:
-            df_monthly = pd.DataFrame([
-                {"Mes": m[5:] + "/" + m[2:4], "Receita": d["revenue"],
-                 "Pedidos": d.get("orders", 0)}
-                for m, d in sorted(ns_monthly.items())
-            ])
-            fig_area = go.Figure()
-            fig_area.add_trace(go.Scatter(
-                x=df_monthly["Mes"], y=df_monthly["Receita"],
-                fill="tozeroy", fillcolor="rgba(201,107,160,0.10)",
-                line=dict(color=PINK, width=3),
-                mode="lines",
-                name="Faturamento",
-                hovertemplate="<b>R$%{y:,.0f}</b><extra></extra>",
-            ))
-            fig_area.add_trace(go.Scatter(
-                x=df_monthly["Mes"], y=df_monthly["Receita"],
-                mode="markers",
-                marker=dict(color="white", size=7,
-                            line=dict(color=PINK, width=2.5)),
-                showlegend=False, hoverinfo="skip",
-            ))
-            # linha de meta
-            fig_area.add_hline(
-                y=meta_fat, line_dash="dot", line_color=GOLD,
-                line_width=1.5,
-                annotation_text=f"Meta R${meta_fat/1000:.0f}k",
-                annotation_font_size=10,
-                annotation_font_color=GOLD,
-            )
-            fig_area.update_layout(
-                height=260,
-                margin=dict(t=16, b=16, l=4, r=4),
-                plot_bgcolor="white", paper_bgcolor="white",
-                xaxis=dict(showgrid=False,
-                           tickfont=dict(size=11, color="#98A2B3",
-                                         family="DM Sans"),
-                           tickangle=-30),
-                yaxis=dict(showgrid=True, gridcolor="#F0F2F5",
-                           tickprefix="R$",
-                           tickfont=dict(size=10, color="#98A2B3",
-                                          family="DM Sans"),
-                           gridwidth=1),
-                showlegend=False,
-                font=dict(family="DM Sans"),
-            )
-            st.plotly_chart(fig_area, use_container_width=True)
-        else:
-            st.markdown(
-                '<div style="padding:50px 0;text-align:center;'
-                'color:#9CA3AF;font-size:13px">Sem dados ainda.</div>',
-                unsafe_allow_html=True,
-            )
-        st.markdown("</div>", unsafe_allow_html=True)
+            if months_2026:
+                df_m26 = pd.DataFrame([
+                    {"Mes": MESES_ABR_D[int(m[5:7])-1],
+                     "Receita": ns_monthly[m]["revenue"],
+                     "Pedidos": ns_monthly[m].get("orders", 0)}
+                    for m in months_2026
+                ])
+                fig_area = go.Figure()
+                fig_area.add_trace(go.Scatter(
+                    x=df_m26["Mes"], y=df_m26["Receita"],
+                    fill="tozeroy", fillcolor="rgba(201,107,160,0.10)",
+                    line=dict(color=PINK, width=3),
+                    mode="lines+markers",
+                    marker=dict(color="white", size=8,
+                                line=dict(color=PINK, width=2.5)),
+                    name="Faturamento",
+                    hovertemplate="<b>%{x}</b>: R$%{y:,.0f}<extra></extra>",
+                ))
+                fig_area.add_hline(
+                    y=meta_fat, line_dash="dot", line_color=GOLD,
+                    line_width=1.5,
+                    annotation_text=f"Meta R${meta_fat/1000:.0f}k",
+                    annotation_font_size=10,
+                    annotation_font_color=GOLD,
+                )
+                fig_area.update_layout(
+                    height=260,
+                    margin=dict(t=16, b=16, l=4, r=4),
+                    plot_bgcolor="white", paper_bgcolor="white",
+                    xaxis=dict(showgrid=False,
+                               tickfont=dict(size=11, color="#98A2B3", family="DM Sans")),
+                    yaxis=dict(showgrid=True, gridcolor="#F0F2F5",
+                               tickprefix="R$",
+                               tickfont=dict(size=10, color="#98A2B3", family="DM Sans"),
+                               gridwidth=1),
+                    showlegend=False,
+                    font=dict(family="DM Sans"),
+                )
+                st.plotly_chart(fig_area, use_container_width=True)
+            else:
+                st.markdown(
+                    '<div style="padding:50px 0;text-align:center;'
+                    'color:#9CA3AF;font-size:13px">Sem dados 2026 ainda.</div>',
+                    unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    with alert_col:
-        n_items = sum(1 for x in [segs['Reativar'], total_em_prod, segs['VIP']] if x > 0)
-        badge_color = PINK if n_urgentes > 0 else "#6B7280"
-        st.markdown(f"""
+        with alert_col:
+            st.markdown(f"""
 <div class="wcard" style="height:100%">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
     <div class="wcard-title">Atencao necessaria</div>
@@ -689,28 +703,28 @@ if pagina == "◆ Dashboard":
 </div>
 """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
 
-    # ── LINHA 3: Top Produtos + Segmentos + Metas editaveis ───────────────────
-    b1, b2, b3 = st.columns([4.5, 2.8, 2.7], gap="large")
+        # ── Top Produtos + Metas ──────────────────────────────────────────────
+        b1_m, b2_m = st.columns([6, 4], gap="large")
 
-    with b1:
-        st.markdown(f"""
+        with b1_m:
+            st.markdown(f"""
 <div class="wcard">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <div>
       <div class="wcard-title">Top Produtos</div>
-      <div class="wcard-sub">Receita acumulada por produto</div>
+      <div class="wcard-sub">Receita acumulada — historico</div>
     </div>
     <span class="chip chip-gray">{len(ns_products)} produtos</span>
   </div>
 """, unsafe_allow_html=True)
-        for i, p in enumerate(ns_products[:8]):
-            pct = p["revenue"] / total_rev * 100 if total_rev else 0
-            bar_w = max(4, int(pct * 3.2))
-            rank_bg    = PINK if i == 0 else (GOLD if i == 1 else (NAVY if i == 2 else "#E5E7EB"))
-            rank_color = "white" if i < 3 else "#6B7280"
-            st.markdown(f"""
+            for i, p in enumerate(ns_products[:8]):
+                pct = p["revenue"] / total_rev * 100 if total_rev else 0
+                bar_w = max(4, int(pct * 3.2))
+                rank_bg    = PINK if i == 0 else (GOLD if i == 1 else (NAVY if i == 2 else "#E5E7EB"))
+                rank_color = "white" if i < 3 else "#6B7280"
+                st.markdown(f"""
   <div style="display:flex;align-items:center;gap:10px;
               padding:9px 0;border-bottom:1px solid #F0F2F5">
     <span style="min-width:24px;height:24px;background:{rank_bg};
@@ -735,69 +749,23 @@ if pagina == "◆ Dashboard":
     </div>
   </div>
 """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    with b2:
-        st.markdown(f"""
-<div class="wcard">
-  <div class="wcard-title" style="margin-bottom:4px">Saude da Base</div>
-  <div class="wcard-sub" style="margin-bottom:8px">Segmentacao de clientes</div>
-""", unsafe_allow_html=True)
-        if ns_customers:
-            fig_seg = go.Figure(go.Pie(
-                labels=list(segs.keys()),
-                values=list(segs.values()),
-                hole=0.60,
-                marker_colors=[GOLD, "#22C55E", PINK, "#D1D5DB"],
-                textinfo="none",
-                hovertemplate="<b>%{label}</b>: %{value}<extra></extra>",
-            ))
-            fig_seg.update_layout(
-                margin=dict(t=4, b=4, l=4, r=4),
-                height=160,
-                paper_bgcolor="rgba(0,0,0,0)",
-                showlegend=False,
-                annotations=[dict(
-                    text=f"<b>{len(ns_customers)}</b><br><span>clientes</span>",
-                    x=0.5, y=0.5, font_size=14, font_color=NAVY,
-                    showarrow=False, font=dict(family="DM Sans")
-                )]
-            )
-            st.plotly_chart(fig_seg, use_container_width=True)
-        segs_data = [
-            ("VIP",      segs['VIP'],      "#FEF9C3","#713F12", "◆"),
-            ("Ativos",   segs['Ativo'],    "#DCFCE7","#15803D", "●"),
-            ("Reativar", segs['Reativar'], "#FFEDD5","#92400E", "▲"),
-            ("Perdidos", segs['Perdido'],  "#F3F4F6","#6B7280", "▪"),
-        ]
-        st.markdown(
-            '<div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">',
-            unsafe_allow_html=True)
-        for lbl, val, bg, fg, sym in segs_data:
+        with b2_m:
+            conn_meta = get_conn()
             st.markdown(f"""
-  <div style="display:flex;justify-content:space-between;align-items:center;
-              padding:6px 10px;background:{bg};border-radius:8px">
-    <span style="font-size:12px;font-weight:700;color:{fg}">{sym} {lbl}</span>
-    <span style="font-size:13px;font-weight:800;color:{NAVY}">{val}</span>
-  </div>
-""", unsafe_allow_html=True)
-        st.markdown("</div></div>", unsafe_allow_html=True)
-
-    with b3:
-        conn_meta = get_conn()
-        st.markdown(f"""
 <div class="wcard">
   <div class="wcard-title" style="margin-bottom:4px">Metas do Mes</div>
-  <div class="wcard-sub" style="margin-bottom:12px">Clique para editar</div>
+  <div class="wcard-sub" style="margin-bottom:12px">Progresso em tempo real</div>
 """, unsafe_allow_html=True)
-        _meta_cfg = [
-            ("fat_mensal",     "Faturamento",  f"R${meta_fat:,.0f}",    prog_fat,   PINK),
-            ("pedidos_mensal", "Pedidos",       str(int(meta_ped)),       prog_ped,   NAVY),
-            ("clientes_vip",   "VIP alvo",      str(int(meta_vip)),       prog_vip,   GOLD),
-            ("ticket_medio",   "Ticket medio",  f"R${meta_ticket:.0f}",   prog_ticket,"#0ea5e9"),
-        ]
-        for chave, lbl, val_str, prog, cor in _meta_cfg:
-            st.markdown(f"""
+            _meta_cfg = [
+                ("fat_mensal",     "Faturamento",  f"R${meta_fat:,.0f}",  prog_fat,    PINK),
+                ("pedidos_mensal", "Pedidos",       str(int(meta_ped)),     prog_ped,    "#2563EB"),
+                ("clientes_vip",   "VIP alvo",      str(int(meta_vip)),     prog_vip,    GOLD),
+                ("ticket_medio",   "Ticket medio",  f"R${meta_ticket:.0f}", prog_ticket, "#0F766E"),
+            ]
+            for chave, lbl, val_str, prog, cor in _meta_cfg:
+                st.markdown(f"""
   <div style="padding:10px 0;border-bottom:1px solid #F0F2F5">
     <div style="display:flex;justify-content:space-between;margin-bottom:5px">
       <span style="font-size:12px;font-weight:600;color:{NAVY}">{lbl}</span>
@@ -809,126 +777,294 @@ if pagina == "◆ Dashboard":
     <div style="font-size:10px;color:#9CA3AF;margin-top:3px">{prog:.0f}% da meta</div>
   </div>
 """, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            with st.expander("Editar metas", expanded=False):
+                new_fat    = st.number_input("Meta faturamento mensal (R$)",
+                                             value=float(meta_fat), step=1000.0,
+                                             key="meta_fat_inp")
+                new_ped    = st.number_input("Meta pedidos por mes",
+                                             value=float(meta_ped), step=5.0,
+                                             key="meta_ped_inp")
+                new_vip    = st.number_input("Meta clientes VIP",
+                                             value=float(meta_vip), step=1.0,
+                                             key="meta_vip_inp")
+                new_ticket = st.number_input("Meta ticket medio (R$)",
+                                             value=float(meta_ticket), step=10.0,
+                                             key="meta_ticket_inp")
+                if st.button("Salvar metas", type="primary", key="salvar_metas"):
+                    for k, v in [("fat_mensal", new_fat), ("pedidos_mensal", new_ped),
+                                  ("clientes_vip", new_vip), ("ticket_medio", new_ticket)]:
+                        conn_meta.execute(
+                            "UPDATE metas SET valor=? WHERE chave=?", (v, k))
+                    conn_meta.commit()
+                    st.success("Metas salvas!")
+                    st.rerun()
+            conn_meta.close()
 
-        st.markdown("</div>", unsafe_allow_html=True)
-        with st.expander("Editar metas", expanded=False):
-            new_fat    = st.number_input("Meta faturamento mensal (R$)",
-                                         value=float(meta_fat), step=1000.0,
-                                         key="meta_fat_inp")
-            new_ped    = st.number_input("Meta pedidos por mes",
-                                         value=float(meta_ped), step=5.0,
-                                         key="meta_ped_inp")
-            new_vip    = st.number_input("Meta clientes VIP",
-                                         value=float(meta_vip), step=1.0,
-                                         key="meta_vip_inp")
-            new_ticket = st.number_input("Meta ticket medio (R$)",
-                                         value=float(meta_ticket), step=10.0,
-                                         key="meta_ticket_inp")
-            if st.button("Salvar metas", type="primary", key="salvar_metas"):
-                for k, v in [("fat_mensal", new_fat), ("pedidos_mensal", new_ped),
-                              ("clientes_vip", new_vip), ("ticket_medio", new_ticket)]:
-                    conn_meta.execute(
-                        "UPDATE metas SET valor=? WHERE chave=?", (v, k))
-                conn_meta.commit()
-                st.success("Metas salvas!")
-                st.rerun()
-        conn_meta.close()
+    # ══ TAB ANUAL ════════════════════════════════════════════════════════════
+    with tab_anual:
 
-    # ── LINHA 4: tamanhos + scatter receita x pedidos ─────────────────────────
-    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
-    c1, c2 = st.columns([5, 5], gap="large")
+        # ── KPI cards anuais ─────────────────────────────────────────────────
+        a1, a2, a3, a4 = st.columns(4, gap="medium")
 
-    with c1:
-        sizes_all = {}
-        for p in ns_products:
-            for s, q in (p.get("sizes") or {}).items():
-                sizes_all[s] = sizes_all.get(s, 0) + q
-        st.markdown(f"""
+        with a1:
+            st.markdown(f"""
+<div class="kcard" style="background:#FDF2F8;border-color:#F9D2E9">
+  <div class="kcard-label" style="color:{PINK}">Faturamento — {ANO_DASH}</div>
+  <div class="kcard-val">R${fat_ano/1000:.1f}k</div>
+  <div class="kcard-sub">{len([m for m in rev_2026 if rev_2026[m]>0])} meses com receita</div>
+</div>""", unsafe_allow_html=True)
+
+        with a2:
+            meses_c_dados = max(len(ped_2026), 1)
+            st.markdown(f"""
+<div class="kcard" style="background:#EFF6FF;border-color:#BFDBFE">
+  <div class="kcard-label" style="color:#2563EB">Pedidos — {ANO_DASH}</div>
+  <div class="kcard-val">{ped_ano}</div>
+  <div class="kcard-sub">media de {ped_ano/meses_c_dados:.0f} por mes</div>
+</div>""", unsafe_allow_html=True)
+
+        with a3:
+            st.markdown(f"""
+<div class="kcard" style="background:#F0FDFA;border-color:#99F6E4">
+  <div class="kcard-label" style="color:#0F766E">Ticket Medio — {ANO_DASH}</div>
+  <div class="kcard-val">R${ticket_ano:.0f}</div>
+  <div class="kcard-sub">baseado em pedidos do ano</div>
+</div>""", unsafe_allow_html=True)
+
+        with a4:
+            st.markdown(f"""
+<div class="kcard" style="background:#FEFCE8;border-color:#FEF08A">
+  <div class="kcard-label" style="color:#92400E">Clientes na Base</div>
+  <div class="kcard-val">{len(ns_customers)}</div>
+  <div class="kcard-sub">{segs['VIP']} VIP · {segs['Ativo']} ativos</div>
+</div>""", unsafe_allow_html=True)
+
+        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+
+        # ── gráfico 12 meses + segmentos ──────────────────────────────────────
+        ca, cs = st.columns([6.5, 3.5], gap="large")
+
+        with ca:
+            st.markdown(f"""
+<div class="wcard" style="padding-bottom:6px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+    <div>
+      <div class="wcard-title">Evolucao Anual — {ANO_DASH}</div>
+      <div class="wcard-sub">Faturamento mensal · 12 meses</div>
+    </div>
+    <span style="background:#F0F2F5;color:#6B7280;padding:5px 14px;
+                 border-radius:10px;font-size:11px;font-weight:700">
+      R${fat_ano/1000:.1f}k acumulado
+    </span>
+  </div>
+""", unsafe_allow_html=True)
+            df_anual = pd.DataFrame([
+                {"Mes": MESES_ABR_D[i], "Receita": rev_2026.get(i+1, 0),
+                 "Pedidos": ped_2026.get(i+1, 0)}
+                for i in range(12)
+            ])
+            fig_anual = go.Figure()
+            fig_anual.add_trace(go.Bar(
+                x=df_anual["Mes"], y=df_anual["Receita"],
+                marker=dict(
+                    color=[PINK if r > 0 else "#E5E7EB" for r in df_anual["Receita"]],
+                    opacity=0.85,
+                ),
+                name="Faturamento",
+                hovertemplate="<b>%{x}</b>: R$%{y:,.0f}<extra></extra>",
+            ))
+            fig_anual.add_hline(
+                y=meta_fat, line_dash="dot", line_color=GOLD,
+                line_width=1.5,
+                annotation_text=f"Meta R${meta_fat/1000:.0f}k",
+                annotation_font_size=10,
+                annotation_font_color=GOLD,
+            )
+            fig_anual.update_layout(
+                height=260,
+                margin=dict(t=16, b=16, l=4, r=4),
+                plot_bgcolor="white", paper_bgcolor="white",
+                xaxis=dict(showgrid=False,
+                           tickfont=dict(size=11, color="#98A2B3", family="DM Sans")),
+                yaxis=dict(showgrid=True, gridcolor="#F0F2F5",
+                           tickprefix="R$",
+                           tickfont=dict(size=10, color="#98A2B3", family="DM Sans"),
+                           gridwidth=1),
+                bargap=0.35, showlegend=False,
+                font=dict(family="DM Sans"),
+            )
+            st.plotly_chart(fig_anual, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with cs:
+            st.markdown(f"""
+<div class="wcard">
+  <div class="wcard-title" style="margin-bottom:4px">Saude da Base</div>
+  <div class="wcard-sub" style="margin-bottom:8px">Segmentacao de clientes</div>
+""", unsafe_allow_html=True)
+            if ns_customers:
+                fig_seg = go.Figure(go.Pie(
+                    labels=list(segs.keys()),
+                    values=list(segs.values()),
+                    hole=0.60,
+                    marker_colors=[GOLD, "#22C55E", PINK, "#D1D5DB"],
+                    textinfo="none",
+                    hovertemplate="<b>%{label}</b>: %{value}<extra></extra>",
+                ))
+                fig_seg.update_layout(
+                    margin=dict(t=4, b=4, l=4, r=4),
+                    height=160,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    showlegend=False,
+                    annotations=[dict(
+                        text=f"<b>{len(ns_customers)}</b><br><span>clientes</span>",
+                        x=0.5, y=0.5, font_size=14, font_color=NAVY,
+                        showarrow=False, font=dict(family="DM Sans")
+                    )]
+                )
+                st.plotly_chart(fig_seg, use_container_width=True)
+            segs_data = [
+                ("VIP",      segs['VIP'],      "#FEF9C3","#713F12", "◆"),
+                ("Ativos",   segs['Ativo'],    "#DCFCE7","#15803D", "●"),
+                ("Reativar", segs['Reativar'], "#FFEDD5","#92400E", "▲"),
+                ("Perdidos", segs['Perdido'],  "#F3F4F6","#6B7280", "▪"),
+            ]
+            st.markdown(
+                '<div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">',
+                unsafe_allow_html=True)
+            for lbl, val, bg, fg, sym in segs_data:
+                st.markdown(f"""
+  <div style="display:flex;justify-content:space-between;align-items:center;
+              padding:6px 10px;background:{bg};border-radius:8px">
+    <span style="font-size:12px;font-weight:700;color:{fg}">{sym} {lbl}</span>
+    <span style="font-size:13px;font-weight:800;color:{NAVY}">{val}</span>
+  </div>
+""", unsafe_allow_html=True)
+            st.markdown("</div></div>", unsafe_allow_html=True)
+
+        st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+
+        # ── resumo mensal + tamanhos + scatter ────────────────────────────────
+        t1, t2, t3 = st.columns([4, 3, 3], gap="large")
+
+        with t1:
+            st.markdown(f"""
+<div class="wcard" style="padding-bottom:10px">
+  <div class="wcard-title" style="margin-bottom:2px">Resumo Mensal — {ANO_DASH}</div>
+  <div class="wcard-sub">Faturamento e pedidos por mes</div>
+""", unsafe_allow_html=True)
+            rows_anual = []
+            for i in range(12):
+                m_num = i + 1
+                rev_m = rev_2026.get(m_num, 0)
+                ped_m = ped_2026.get(m_num, 0)
+                vs_meta = "—"
+                if rev_m > 0 and meta_fat > 0:
+                    diff = ((rev_m / meta_fat) - 1) * 100
+                    vs_meta = f"+{diff:.0f}%" if diff >= 0 else f"{diff:.0f}%"
+                rows_anual.append({
+                    "Mes": MESES_ABR_D[i],
+                    "Faturamento": f"R${rev_m:,.0f}" if rev_m > 0 else "—",
+                    "Pedidos": ped_m if ped_m > 0 else "—",
+                    "vs Meta": vs_meta,
+                })
+            df_resumo = pd.DataFrame(rows_anual)
+            st.dataframe(df_resumo, use_container_width=True, hide_index=True, height=360)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with t2:
+            sizes_all = {}
+            for p in ns_products:
+                for s, q in (p.get("sizes") or {}).items():
+                    sizes_all[s] = sizes_all.get(s, 0) + q
+            st.markdown(f"""
 <div class="wcard" style="padding-bottom:10px">
   <div class="wcard-title" style="margin-bottom:2px">Tamanhos mais vendidos</div>
   <div class="wcard-sub">Unidades por tamanho</div>
 """, unsafe_allow_html=True)
-        if sizes_all:
-            df_sz = pd.DataFrame(
-                sorted(sizes_all.items(), key=lambda x: -x[1])[:8],
-                columns=["Tamanho", "Unidades"]
-            )
-            fig_sz = go.Figure(go.Bar(
-                x=df_sz["Tamanho"], y=df_sz["Unidades"],
-                marker=dict(
-                    color=df_sz["Unidades"],
-                    colorscale=[[0, "#E5E7EB"], [1, PINK]],
-                    showscale=False,
-                ),
-                text=df_sz["Unidades"], textposition="outside",
-                textfont=dict(size=11, family="DM Sans"),
-            ))
-            fig_sz.update_layout(
-                height=200,
-                margin=dict(t=12, b=8, l=0, r=0),
-                plot_bgcolor="white", paper_bgcolor="white",
-                xaxis=dict(showgrid=False,
-                           tickfont=dict(size=11, family="DM Sans")),
-                yaxis=dict(visible=False),
-                showlegend=False,
-                font=dict(family="DM Sans"),
-            )
-            st.plotly_chart(fig_sz, use_container_width=True)
-        else:
-            st.markdown('<div style="padding:30px 0;text-align:center;'
-                        'color:#9CA3AF">Sem dados de tamanho.</div>',
-                        unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+            if sizes_all:
+                df_sz = pd.DataFrame(
+                    sorted(sizes_all.items(), key=lambda x: -x[1])[:8],
+                    columns=["Tamanho", "Unidades"]
+                )
+                fig_sz = go.Figure(go.Bar(
+                    x=df_sz["Tamanho"], y=df_sz["Unidades"],
+                    marker=dict(
+                        color=df_sz["Unidades"],
+                        colorscale=[[0, "#E5E7EB"], [1, PINK]],
+                        showscale=False,
+                    ),
+                    text=df_sz["Unidades"], textposition="outside",
+                    textfont=dict(size=11, family="DM Sans"),
+                ))
+                fig_sz.update_layout(
+                    height=220,
+                    margin=dict(t=12, b=8, l=0, r=0),
+                    plot_bgcolor="white", paper_bgcolor="white",
+                    xaxis=dict(showgrid=False,
+                               tickfont=dict(size=11, family="DM Sans")),
+                    yaxis=dict(visible=False),
+                    showlegend=False,
+                    font=dict(family="DM Sans"),
+                )
+                st.plotly_chart(fig_sz, use_container_width=True)
+            else:
+                st.markdown('<div style="padding:30px 0;text-align:center;'
+                            'color:#9CA3AF">Sem dados de tamanho.</div>',
+                            unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    with c2:
-        st.markdown(f"""
+        with t3:
+            st.markdown(f"""
 <div class="wcard" style="padding-bottom:10px">
-  <div class="wcard-title" style="margin-bottom:2px">Receita vs Pedidos por mes</div>
+  <div class="wcard-title" style="margin-bottom:2px">Receita vs Pedidos</div>
   <div class="wcard-sub">Correlacao receita-volume</div>
 """, unsafe_allow_html=True)
-        if ns_monthly:
-            df_sc = pd.DataFrame([
-                {"Mes": m[5:] + "/" + m[2:4],
-                 "Receita": d["revenue"],
-                 "Pedidos": d.get("orders", 0)}
-                for m, d in sorted(ns_monthly.items())
-            ])
-            fig_sc = go.Figure()
-            fig_sc.add_trace(go.Bar(
-                x=df_sc["Mes"], y=df_sc["Pedidos"],
-                name="Pedidos", yaxis="y2",
-                marker_color=NAVY, opacity=0.25,
-                hovertemplate="%{y} pedidos<extra></extra>",
-            ))
-            fig_sc.add_trace(go.Scatter(
-                x=df_sc["Mes"], y=df_sc["Receita"],
-                name="Receita", mode="lines+markers",
-                line=dict(color=PINK, width=2.5),
-                marker=dict(color="white", size=7,
-                            line=dict(color=PINK, width=2)),
-                hovertemplate="R$%{y:,.0f}<extra></extra>",
-            ))
-            fig_sc.update_layout(
-                height=200,
-                margin=dict(t=12, b=8, l=4, r=4),
-                plot_bgcolor="white", paper_bgcolor="white",
-                xaxis=dict(showgrid=False,
-                           tickfont=dict(size=10, family="DM Sans"),
-                           tickangle=-30),
-                yaxis=dict(showgrid=True, gridcolor="#F0F2F5",
-                           tickprefix="R$",
-                           tickfont=dict(size=10, family="DM Sans")),
-                yaxis2=dict(overlaying="y", side="right",
-                            showgrid=False, visible=False),
-                showlegend=False,
-                font=dict(family="DM Sans"),
-            )
-            st.plotly_chart(fig_sc, use_container_width=True)
-        else:
-            st.markdown('<div style="padding:30px 0;text-align:center;'
-                        'color:#9CA3AF">Sem dados.</div>',
-                        unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+            if ns_monthly:
+                df_sc = pd.DataFrame([
+                    {"Mes": m[5:] + "/" + m[2:4],
+                     "Receita": d["revenue"],
+                     "Pedidos": d.get("orders", 0)}
+                    for m, d in sorted(ns_monthly.items())
+                ])
+                fig_sc = go.Figure()
+                fig_sc.add_trace(go.Bar(
+                    x=df_sc["Mes"], y=df_sc["Pedidos"],
+                    name="Pedidos", yaxis="y2",
+                    marker_color=NAVY, opacity=0.25,
+                    hovertemplate="%{y} pedidos<extra></extra>",
+                ))
+                fig_sc.add_trace(go.Scatter(
+                    x=df_sc["Mes"], y=df_sc["Receita"],
+                    name="Receita", mode="lines+markers",
+                    line=dict(color=PINK, width=2.5),
+                    marker=dict(color="white", size=7,
+                                line=dict(color=PINK, width=2)),
+                    hovertemplate="R$%{y:,.0f}<extra></extra>",
+                ))
+                fig_sc.update_layout(
+                    height=220,
+                    margin=dict(t=12, b=8, l=4, r=4),
+                    plot_bgcolor="white", paper_bgcolor="white",
+                    xaxis=dict(showgrid=False,
+                               tickfont=dict(size=10, family="DM Sans"),
+                               tickangle=-30),
+                    yaxis=dict(showgrid=True, gridcolor="#F0F2F5",
+                               tickprefix="R$",
+                               tickfont=dict(size=10, family="DM Sans")),
+                    yaxis2=dict(overlaying="y", side="right",
+                                showgrid=False, visible=False),
+                    showlegend=False,
+                    font=dict(family="DM Sans"),
+                )
+                st.plotly_chart(fig_sc, use_container_width=True)
+            else:
+                st.markdown('<div style="padding:30px 0;text-align:center;'
+                            'color:#9CA3AF">Sem dados.</div>',
+                            unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA 2 — CRM
