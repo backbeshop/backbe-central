@@ -1394,6 +1394,27 @@ elif pagina == "📄 Declaração MEI":
             ).fetchone())
             dec_id = dec["id"]
 
+            # ── Mostra resultado de processamento anterior (persistido via session_state) ──
+            res_key = f"proc_result_{mei_key}_{ano_sel}"
+            if res_key in st.session_state:
+                res = st.session_state.pop(res_key)
+                if res["novos"] > 0:
+                    st.success(f"✅ {res['novos']} transações importadas de {res['arquivos']} arquivo(s)!")
+                elif res["filtrados"] > 0:
+                    st.warning(
+                        f"⚠️ Encontrei {res['filtrados']} transações nos PDFs, mas **todas são de um ano diferente de {ano_sel}**. "
+                        f"Mude o ano acima para o correto e processe novamente."
+                    )
+                elif res["total_pdf"] > 0:
+                    st.warning(
+                        f"⚠️ {res['total_pdf']} transações encontradas nos PDFs mas nenhuma foi importada. "
+                        f"Verifique se o ano selecionado ({ano_sel}) está correto."
+                    )
+                else:
+                    st.error("❌ Nenhuma transação encontrada nos PDFs. Confirme que são extratos Nubank válidos.")
+                for e in res.get("erros", []):
+                    st.warning(e)
+
             # ── Upload de PDFs ──
             st.markdown("#### 📎 Enviar Extratos Nubank (PDF)")
             st.info(
@@ -1411,32 +1432,40 @@ elif pagina == "📄 Declaração MEI":
             if uploaded:
                 if st.button(f"⚙️ Processar {len(uploaded)} arquivo(s)", key=f"proc_{mei_key}", type="primary"):
                     novos = 0
+                    filtrados = 0
+                    total_pdf = 0
                     erros_total = []
-                    for f in uploaded:
-                        pdf_bytes = f.read()
-                        resultado = parse_nubank_pdf(pdf_bytes, f.name)
+                    with st.spinner("Lendo PDFs..."):
+                        for f in uploaded:
+                            pdf_bytes = f.read()
+                            resultado = parse_nubank_pdf(pdf_bytes, f.name)
 
-                        if resultado["erros"]:
-                            erros_total.extend([f"**{f.name}**: {e}" for e in resultado["erros"]])
+                            if resultado["erros"]:
+                                erros_total.extend([f"**{f.name}**: {e}" for e in resultado["erros"]])
 
-                        for t in resultado["transacoes"]:
-                            # Filtra pelo ano selecionado
-                            if t["data"]:
+                            total_pdf += len(resultado["transacoes"])
+                            for t in resultado["transacoes"]:
+                                # Filtra pelo ano selecionado
+                                if t["data"]:
+                                    try:
+                                        ano_tx = int(t["data"].split("/")[2])
+                                        if ano_tx != ano_sel:
+                                            filtrados += 1
+                                            continue
+                                    except Exception:
+                                        pass
                                 try:
-                                    ano_tx = int(t["data"].split("/")[2])
-                                    if ano_tx != ano_sel:
-                                        continue
-                                except Exception:
-                                    pass
-                            conn.execute("""
-                                INSERT INTO mei_transacoes
-                                (declaracao_id, data, descricao, valor, tipo, contar_receita, arquivo)
-                                VALUES (?,?,?,?,?,?,?)
-                            """, (
-                                dec_id, t["data"], t["descricao"], t["valor"],
-                                t["tipo"], 1 if t["tipo"] == "entrada" else 0, f.name
-                            ))
-                            novos += 1
+                                    conn.execute("""
+                                        INSERT INTO mei_transacoes
+                                        (declaracao_id, data, descricao, valor, tipo, contar_receita, arquivo)
+                                        VALUES (?,?,?,?,?,?,?)
+                                    """, (
+                                        dec_id, t["data"], t["descricao"], t["valor"],
+                                        t["tipo"], 1 if t["tipo"] == "entrada" else 0, f.name
+                                    ))
+                                    novos += 1
+                                except Exception as e_db:
+                                    erros_total.append(f"Erro ao salvar transação: {e_db}")
 
                     # Recalcula receita bruta
                     rb = conn.execute(
@@ -1450,10 +1479,14 @@ elif pagina == "📄 Declaração MEI":
                     )
                     conn.commit()
 
-                    st.success(f"✅ {novos} transações importadas de {len(uploaded)} arquivo(s)")
-                    if erros_total:
-                        for e in erros_total:
-                            st.warning(e)
+                    # Salva resultado em session_state para mostrar após rerun
+                    st.session_state[res_key] = {
+                        "novos": novos,
+                        "filtrados": filtrados,
+                        "total_pdf": total_pdf,
+                        "arquivos": len(uploaded),
+                        "erros": erros_total,
+                    }
                     st.rerun()
 
             st.divider()
@@ -1507,7 +1540,7 @@ elif pagina == "📄 Declaração MEI":
                         yaxis_title="R$", xaxis_title="",
                         showlegend=False, margin=dict(t=30, b=0)
                     )
-                    st.plotly_chart(fig_mei, width="stretch")
+                    st.plotly_chart(fig_mei, use_container_width=True)
 
                 # Tabela de transações com toggle para incluir/excluir
                 st.markdown("#### 📋 Transações — Entradas")
@@ -1552,14 +1585,12 @@ elif pagina == "📄 Declaração MEI":
                         )
                         conn.commit()
                         st.success("✅ Receita bruta recalculada!")
-                        st.rerun()
 
                 if st.button("🗑️ Limpar todas as transações deste MEI/ano", key=f"clear_{mei_key}"):
                     conn.execute("DELETE FROM mei_transacoes WHERE declaracao_id=?", (dec_id,))
                     conn.execute("UPDATE mei_declaracoes SET receita_bruta=0 WHERE id=?", (dec_id,))
                     conn.commit()
-                    st.success("Transações removidas.")
-                    st.rerun()
+                    st.success("✅ Transações removidas.")
 
     render_mei_tab("isabela", "Isabela Dagostim", tab_isa)
     render_mei_tab("juliana", "Juliana Dagostim", tab_jul)
