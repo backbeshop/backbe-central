@@ -272,7 +272,9 @@ def init_db():
         ("Duna Bordado",        "tecido", "metro", None, 14.90, None,  1.5, "diversas", "",                            "loja de tecidos"),
         ("Crepe Amanda",        "tecido", "metro", None, 14.20, None,  1.5, "diversas", "",                            "loja de tecidos"),
         ("Crepe com aplicação", "tecido", "metro", None, 14.90, None,  1.5, "diversas", "",                            "loja de tecidos"),
-        ("Viscolinho",          "tecido", "metro", None, 12.90, None,  1.5, "diversas", "100% viscose",                "gab textil"),
+        ("Viscolinho",                "tecido", "metro", None, 12.90, None,  1.5, "diversas",         "100% viscose", "gab textil"),
+        ("Sherpa (cinza/vermelho)",   "tecido", "metro", None, 14.90, None,  1.5, "cinza e vermelho", "",             "loja de tecidos"),
+        ("Sherpa (off/preto/bege)",   "tecido", "metro", None, 13.90, None,  1.5, "off, preto e bege","",             ""),
     ]
     for (nome, tipo, unidade, preco_kg, preco_metro, gsm, largura, cor, composicao, forn_nome) in TECIDOS_SEED:
         exists = c.execute("SELECT id FROM tecidos WHERE nome=?", (nome,)).fetchone()
