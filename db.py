@@ -259,6 +259,19 @@ def init_db():
         contar INTEGER DEFAULT 1
     )""")
 
+    # DRE — migração: colunas extras em dre_custos
+    for _col, _default in [
+        ("faturamento_manual", "NULL"),
+        ("vendas_manual", "NULL"),
+        ("pro_labore", "0"),
+        ("cmv_estimado", "0"),
+        ("impostos", "0"),
+    ]:
+        try:
+            c.execute(f"ALTER TABLE dre_custos ADD COLUMN {_col} REAL DEFAULT {_default}")
+        except Exception:
+            pass
+
     # Costureiras padrão
     c.execute("SELECT COUNT(*) FROM costureiras")
     if c.fetchone()[0] == 0:

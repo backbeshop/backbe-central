@@ -1361,7 +1361,7 @@ elif pagina == "💰 Calculadora CMV":
 # ══════════════════════════════════════════════════════════════════════════════
 elif pagina == "💳 Financeiro":
     st.title("💳 Controle Financeiro Mensal")
-    st.caption("DRE mensal com faturamento da Nuvemshop, custos fixos editáveis e extrato bancário.")
+    st.caption("DRE mensal editável — preencha faturamento, custos e veja lucro/margem calculados automaticamente.")
 
     conn = get_conn()
     MESES_NOME = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
@@ -1371,11 +1371,9 @@ elif pagina == "💳 Financeiro":
 
     tab_dre, tab_extrato = st.tabs(["📊 DRE Mensal", "🏦 Extrato Bancário"])
 
-    # ── garante que existam registros para os 12 meses ──────────────────────
+    # ── garante 12 registros no banco ───────────────────────────────────────
     for m in range(1, 13):
-        conn.execute(
-            "INSERT OR IGNORE INTO dre_custos (ano, mes) VALUES (?,?)", (ano_fin, m)
-        )
+        conn.execute("INSERT OR IGNORE INTO dre_custos (ano, mes) VALUES (?,?)", (ano_fin, m))
     conn.commit()
     custos = {
         r["mes"]: r for r in rows_to_list(
@@ -1386,140 +1384,166 @@ elif pagina == "💳 Financeiro":
     # ── receita mensal da Nuvemshop ─────────────────────────────────────────
     try:
         all_orders = fetch_all_orders()
-        rev_mes = {}
-        vnd_mes = {}
+        rev_mes_ns = {}
+        vnd_mes_ns = {}
         for o in all_orders:
-            d = o["created_at"][:7]  # "YYYY-MM"
+            d = o["created_at"][:7]
             yr, mn = int(d[:4]), int(d[5:7])
             if yr == ano_fin:
-                rev_mes[mn] = rev_mes.get(mn, 0) + float(o.get("total") or 0)
-                vnd_mes[mn] = vnd_mes.get(mn, 0) + 1
+                rev_mes_ns[mn] = rev_mes_ns.get(mn, 0) + float(o.get("total") or 0)
+                vnd_mes_ns[mn] = vnd_mes_ns.get(mn, 0) + 1
     except Exception:
-        rev_mes, vnd_mes = {}, {}
+        rev_mes_ns, vnd_mes_ns = {}, {}
 
     with tab_dre:
-        st.markdown("#### Comissões (%)")
-        cc1, cc2, _ = st.columns([1,1,4])
-        pct_mae   = cc1.number_input("Comissão Mãe %",   min_value=0.0, max_value=100.0, value=2.0,  step=0.5, key="fin_pct_mae")
-        pct_bella = cc2.number_input("Comissão Bella %",  min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="fin_pct_bella")
-        st.divider()
+        cc1, cc2, _, _ = st.columns([1,1,1,3])
+        pct_mae   = cc1.number_input("Comissão Mãe %",   min_value=0.0, max_value=100.0,
+                                     value=float(custos[1].get("comissao_mae_pct") or 2.0),
+                                     step=0.5, key="fin_pct_mae")
+        pct_bella = cc2.number_input("Comissão Bella %",  min_value=0.0, max_value=100.0,
+                                     value=float(custos[1].get("comissao_bella_pct") or 10.0),
+                                     step=0.5, key="fin_pct_bella")
 
-        # ── Tabela editável de custos fixos ─────────────────────────────────
-        st.markdown("#### Custos Fixos por Mês")
-        st.caption("Preencha os valores mensais. Os campos de receita vêm da Nuvemshop automaticamente.")
+        st.caption("✏️ Edite qualquer célula branca. As colunas cinzas são calculadas automaticamente.")
 
-        df_dre_input = pd.DataFrame([{
-            "Mês":            MESES_NOME[m-1],
-            "_mes":           m,
-            "Aluguel Sala1":  float(custos[m].get("aluguel_sala1") or 0),
-            "Aluguel Sala2":  float(custos[m].get("aluguel_sala2") or 0),
-            "Energia Sala1":  float(custos[m].get("energia_sala1") or 0),
-            "Energia Sala2":  float(custos[m].get("energia_sala2") or 0),
-            "Internet Sala1": float(custos[m].get("internet_sala1") or 0),
-            "Internet Sala2": float(custos[m].get("internet_sala2") or 0),
-            "Outros Fixos":   float(custos[m].get("outros_fixos") or 0),
-        } for m in range(1, 13)])
+        # ── monta DataFrame com todas as colunas ────────────────────────────
+        def _build_dre_df(custos_dict, rev_ns, vnd_ns, pct_m, pct_b):
+            rows = []
+            for m in range(1, 13):
+                c = custos_dict[m]
+                # faturamento: usa manual se preenchido, senão Nuvemshop
+                fat_ns  = rev_ns.get(m, 0.0)
+                fat_man = c.get("faturamento_manual")
+                fat     = float(fat_man) if fat_man is not None else fat_ns
 
-        edited_dre = st.data_editor(
-            df_dre_input.drop(columns=["_mes"]),
-            use_container_width=True,
-            hide_index=True,
-            height=40 + 36 * 12,
-            disabled=["Mês"],
-            column_config={
-                c: st.column_config.NumberColumn(format="R$%.2f", step=10.0)
-                for c in ["Aluguel Sala1","Aluguel Sala2","Energia Sala1","Energia Sala2",
-                          "Internet Sala1","Internet Sala2","Outros Fixos"]
-            },
-            key="edit_dre_custos"
-        )
+                vnd_ns_val = vnd_ns.get(m, 0)
+                vnd_man    = c.get("vendas_manual")
+                vendas     = int(vnd_man) if vnd_man is not None else vnd_ns_val
 
-        if st.button("💾 Salvar custos fixos", type="primary"):
-            for i, row in edited_dre.iterrows():
-                m = i + 1
-                conn.execute("""
-                    UPDATE dre_custos SET
-                        aluguel_sala1=?, aluguel_sala2=?,
-                        energia_sala1=?, energia_sala2=?,
-                        internet_sala1=?, internet_sala2=?,
-                        outros_fixos=?, comissao_mae_pct=?, comissao_bella_pct=?
-                    WHERE ano=? AND mes=?
-                """, (
-                    float(row["Aluguel Sala1"]), float(row["Aluguel Sala2"]),
-                    float(row["Energia Sala1"]), float(row["Energia Sala2"]),
-                    float(row["Internet Sala1"]), float(row["Internet Sala2"]),
-                    float(row["Outros Fixos"]), pct_mae, pct_bella,
-                    ano_fin, m
-                ))
-            conn.commit()
-            st.success("✅ Custos fixos salvos!")
-            st.rerun()
+                ticket  = fat / vendas if vendas else 0.0
 
-        st.divider()
+                alug1   = float(c.get("aluguel_sala1") or 0)
+                alug2   = float(c.get("aluguel_sala2") or 0)
+                en1     = float(c.get("energia_sala1") or 0)
+                en2     = float(c.get("energia_sala2") or 0)
+                int1    = float(c.get("internet_sala1") or 0)
+                int2    = float(c.get("internet_sala2") or 0)
+                outros  = float(c.get("outros_fixos") or 0)
+                prolabore = float(c.get("pro_labore") or 0)
+                cmv     = float(c.get("cmv_estimado") or 0)
+                impostos = float(c.get("impostos") or 0)
 
-        # ── DRE calculada ────────────────────────────────────────────────────
-        st.markdown("#### DRE — Resultado por Mês")
-        dre_rows = []
-        lucro_ant = None
-        for i, row in edited_dre.iterrows():
-            m = i + 1
-            fat   = rev_mes.get(m, 0)
-            vendas = vnd_mes.get(m, 0)
-            ticket = fat / vendas if vendas else 0
-            com_mae   = fat * pct_mae   / 100
-            com_bella = fat * pct_bella / 100
-            total_com = com_mae + com_bella
-            total_fixo = (float(row["Aluguel Sala1"]) + float(row["Aluguel Sala2"]) +
-                          float(row["Energia Sala1"]) + float(row["Energia Sala2"]) +
-                          float(row["Internet Sala1"]) + float(row["Internet Sala2"]) +
-                          float(row["Outros Fixos"]) + total_com)
-            lucro  = fat - total_fixo
-            margem = (lucro / fat * 100) if fat else 0
-            cresc  = ((lucro / lucro_ant - 1) * 100) if (lucro_ant and lucro_ant != 0) else 0
-            dre_rows.append({
-                "Mês":            MESES_NOME[m-1],
-                "Vendas":         vendas,
-                "Ticket Médio":   ticket,
-                "Faturamento":    fat,
-                "Com. Mãe":       com_mae,
-                "Com. Bella":     com_bella,
-                "Total Fixos":    total_fixo,
-                "Lucro Líquido":  lucro,
-                "Margem %":       margem,
-                "Crescimento %":  cresc if lucro_ant is not None else 0,
-            })
-            if fat > 0:
-                lucro_ant = lucro
+                com_m   = round(fat * pct_m   / 100, 2)
+                com_b   = round(fat * pct_b   / 100, 2)
+                total_fixo = alug1 + alug2 + en1 + en2 + int1 + int2 + outros + prolabore + impostos
+                total_custos = total_fixo + com_m + com_b + cmv
+                lucro   = fat - total_custos
+                margem  = (lucro / fat * 100) if fat else 0.0
 
-        df_dre = pd.DataFrame(dre_rows)
-        st.dataframe(
+                rows.append({
+                    "Mês":           MESES_NOME[m-1],
+                    "Faturamento":   fat,
+                    "Vendas":        vendas,
+                    "Ticket Médio":  round(ticket, 2),
+                    "Aluguel S1":    alug1,
+                    "Aluguel S2":    alug2,
+                    "Energia S1":    en1,
+                    "Energia S2":    en2,
+                    "Internet S1":   int1,
+                    "Internet S2":   int2,
+                    "Pró-labore":    prolabore,
+                    "CMV Estimado":  cmv,
+                    "Impostos":      impostos,
+                    "Outros":        outros,
+                    # calculadas
+                    "Com. Mãe":      com_m,
+                    "Com. Bella":    com_b,
+                    "Total Custos":  round(total_custos, 2),
+                    "Lucro":         round(lucro, 2),
+                    "Margem %":      round(margem, 1),
+                })
+            return pd.DataFrame(rows)
+
+        df_dre = _build_dre_df(custos, rev_mes_ns, vnd_mes_ns, pct_mae, pct_bella)
+
+        COLS_CALC   = ["Ticket Médio","Com. Mãe","Com. Bella","Total Custos","Lucro","Margem %"]
+        COLS_EDIT_R = ["Faturamento","Aluguel S1","Aluguel S2","Energia S1","Energia S2",
+                       "Internet S1","Internet S2","Pró-labore","CMV Estimado","Impostos","Outros"]
+        COLS_EDIT_I = ["Vendas"]
+
+        edited = st.data_editor(
             df_dre,
             use_container_width=True,
             hide_index=True,
-            height=40 + 36 * 12,
+            height=40 + 36 * 13,
+            disabled=["Mês"] + COLS_CALC,
             column_config={
-                "Ticket Médio":  st.column_config.NumberColumn(format="R$%.2f"),
-                "Faturamento":   st.column_config.NumberColumn(format="R$%.2f"),
-                "Com. Mãe":      st.column_config.NumberColumn(format="R$%.2f"),
-                "Com. Bella":    st.column_config.NumberColumn(format="R$%.2f"),
-                "Total Fixos":   st.column_config.NumberColumn(format="R$%.2f"),
-                "Lucro Líquido": st.column_config.NumberColumn(format="R$%.2f"),
-                "Margem %":      st.column_config.NumberColumn(format="%.1f%%"),
-                "Crescimento %": st.column_config.NumberColumn(format="%.1f%%"),
-            }
+                **{c: st.column_config.NumberColumn(label=c, format="R$%.2f", step=10.0, min_value=0.0)
+                   for c in COLS_EDIT_R},
+                **{c: st.column_config.NumberColumn(label=c, format="R$%.2f")
+                   for c in COLS_CALC if c not in ["Margem %","Ticket Médio"]},
+                "Ticket Médio": st.column_config.NumberColumn(format="R$%.2f"),
+                "Margem %":     st.column_config.NumberColumn(format="%.1f%%"),
+                "Vendas":       st.column_config.NumberColumn(label="Vendas", step=1, min_value=0),
+            },
+            key="edit_dre_unificado"
         )
 
-        # KPIs do ano
-        fat_ano   = sum(r["Faturamento"]   for r in dre_rows)
-        lucro_ano = sum(r["Lucro Líquido"] for r in dre_rows)
-        fixos_ano = sum(r["Total Fixos"]   for r in dre_rows)
-        mg_ano    = (lucro_ano / fat_ano * 100) if fat_ano else 0
+        col_sv, col_ns = st.columns([1, 4])
+        salvar = col_sv.button("💾 Salvar DRE", type="primary", key="fin_salvar_dre")
+        col_ns.caption(f"💡 Faturamento importado da Nuvemshop: {sum(rev_mes_ns.values()):,.2f} no ano. "
+                       "Se editar o campo Faturamento, o valor digitado substitui o da Nuvemshop.")
+
+        if salvar:
+            for i, row in edited.iterrows():
+                m = i + 1
+                # faturamento: salva como manual se diferente do NS
+                fat_val = float(row["Faturamento"])
+                fat_ns  = rev_mes_ns.get(m, 0.0)
+                fat_man = fat_val if abs(fat_val - fat_ns) > 0.01 else None
+
+                vnd_val = int(row["Vendas"])
+                vnd_ns  = vnd_mes_ns.get(m, 0)
+                vnd_man = vnd_val if vnd_val != vnd_ns else None
+
+                conn.execute("""
+                    UPDATE dre_custos SET
+                        faturamento_manual=?, vendas_manual=?,
+                        aluguel_sala1=?, aluguel_sala2=?,
+                        energia_sala1=?, energia_sala2=?,
+                        internet_sala1=?, internet_sala2=?,
+                        pro_labore=?, cmv_estimado=?, impostos=?,
+                        outros_fixos=?,
+                        comissao_mae_pct=?, comissao_bella_pct=?
+                    WHERE ano=? AND mes=?
+                """, (
+                    fat_man, vnd_man,
+                    float(row["Aluguel S1"]), float(row["Aluguel S2"]),
+                    float(row["Energia S1"]), float(row["Energia S2"]),
+                    float(row["Internet S1"]), float(row["Internet S2"]),
+                    float(row["Pró-labore"]), float(row["CMV Estimado"]), float(row["Impostos"]),
+                    float(row["Outros"]),
+                    pct_mae, pct_bella,
+                    ano_fin, m
+                ))
+            conn.commit()
+            st.success("✅ DRE salvo!")
+            st.rerun()
+
+        # ── KPIs anuais ─────────────────────────────────────────────────────
         st.divider()
-        k1,k2,k3,k4 = st.columns(4)
-        k1.metric("Faturamento anual",  f"R${fat_ano:,.2f}")
-        k2.metric("Total custos fixos", f"R${fixos_ano:,.2f}")
-        k3.metric("Lucro anual",        f"R${lucro_ano:,.2f}")
-        k4.metric("Margem anual",       f"{mg_ano:.1f}%")
+        fat_ano    = float(edited["Faturamento"].sum())
+        custos_ano = float(edited["Total Custos"].sum())
+        lucro_ano  = float(edited["Lucro"].sum())
+        mg_ano     = (lucro_ano / fat_ano * 100) if fat_ano else 0
+        best_mes   = edited.loc[edited["Faturamento"].idxmax(), "Mês"] if fat_ano else "—"
+
+        k1, k2, k3, k4, k5 = st.columns(5)
+        k1.metric("💰 Faturamento anual", f"R${fat_ano:,.2f}")
+        k2.metric("📦 Total custos",      f"R${custos_ano:,.2f}")
+        k3.metric("✅ Lucro anual",        f"R${lucro_ano:,.2f}")
+        k4.metric("📊 Margem anual",      f"{mg_ano:.1f}%")
+        k5.metric("🏆 Melhor mês",        best_mes)
 
     # ── Extrato bancário ──────────────────────────────────────────────────────
     with tab_extrato:
@@ -1586,21 +1610,29 @@ elif pagina == "💳 Financeiro":
 
             with t_ent:
                 if entradas_e:
-                    st.dataframe(
-                        pd.DataFrame([{"Data": t["data"], "Descrição": t["descricao"],
-                                       "Valor": t["valor"]} for t in entradas_e]),
+                    df_ent = pd.DataFrame([{
+                        "Data": t["data"], "Descrição": t["descricao"], "Valor": t["valor"]
+                    } for t in entradas_e])
+                    st.data_editor(
+                        df_ent,
                         use_container_width=True, hide_index=True,
                         height=min(40 + 36*len(entradas_e), 3000),
-                        column_config={"Valor": st.column_config.NumberColumn(format="R$%.2f")}
+                        disabled=["Data","Descrição","Valor"],
+                        column_config={"Valor": st.column_config.NumberColumn(format="R$%.2f")},
+                        key="ext_ent_view"
                     )
             with t_sai:
                 if saidas_e:
-                    st.dataframe(
-                        pd.DataFrame([{"Data": t["data"], "Descrição": t["descricao"],
-                                       "Valor": t["valor"]} for t in saidas_e]),
+                    df_sai = pd.DataFrame([{
+                        "Data": t["data"], "Descrição": t["descricao"], "Valor": t["valor"]
+                    } for t in saidas_e])
+                    st.data_editor(
+                        df_sai,
                         use_container_width=True, hide_index=True,
                         height=min(40 + 36*len(saidas_e), 3000),
-                        column_config={"Valor": st.column_config.NumberColumn(format="R$%.2f")}
+                        disabled=["Data","Descrição","Valor"],
+                        column_config={"Valor": st.column_config.NumberColumn(format="R$%.2f")},
+                        key="ext_sai_view"
                     )
 
             if st.button("🗑️ Limpar transações deste mês", key="fin_clear_ext"):
