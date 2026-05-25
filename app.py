@@ -276,7 +276,7 @@ with st.sidebar:
         "🧶 Produtos",
         "👥 CRM — Clientes",
         "🧵 Tecidos",
-        "🔩 Acabamentos",
+        "🔩 Aviamentos",
         "🏭 Ordens de Produção",
         "💰 Calculadora CMV",
         "📈 Crescimento",
@@ -2014,7 +2014,7 @@ elif pagina == "🧶 Produtos":
         custo_emb_np  = c6.number_input("Embalagem R$/peça", min_value=0.0, step=0.5, value=10.0, key="np_emb")
 
         # ── Acabamentos / Aviamentos ────────────────────────────────────────
-        st.markdown("**🔩 Acabamentos e Aviamentos**")
+        st.markdown("**🔩 Aviamentos**")
 
         acabamentos_db_np = rows_to_list(conn.execute(
             "SELECT id, nome, preco, unidade, categoria FROM acabamentos WHERE ativo=1 ORDER BY categoria, nome"
@@ -2065,7 +2065,7 @@ elif pagina == "🧶 Produtos":
                 st.caption("Nenhum aviamento adicionado ainda.")
                 total_av = 0.0
         else:
-            st.caption("Nenhum aviamento cadastrado. Vá em **🔩 Acabamentos** para adicionar.")
+            st.caption("Nenhum aviamento cadastrado. Vá em **🔩 Aviamentos** no menu lateral para adicionar.")
             total_av = 0.0
 
         # Campo extra para custos adicionais não listados
@@ -2117,8 +2117,8 @@ elif pagina == "🧶 Produtos":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA — ACABAMENTOS
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "🔩 Acabamentos":
-    st.title("🔩 Peças e Acabamentos")
+elif pagina == "🔩 Aviamentos":
+    st.title("🔩 Aviamentos")
     st.caption("Cadastre botões, zíperes, elásticos e outros aviamentos. Eles ficam salvos para usar na Calculadora CMV.")
 
     CATS_ACB = ["botão", "zíper", "elástico", "etiqueta", "forro", "ribana", "viés", "ilhós", "regulagem", "outro"]
