@@ -809,18 +809,24 @@ elif pagina == "🧵 Tecidos":
 
             submitted = st.form_submit_button("✅ Cadastrar Tecido", type="primary")
             if submitted and nome:
-                conn.execute("""
-                    INSERT INTO tecidos (nome, tipo, unidade, preco_kg, preco_metro, peso_gsm,
-                                        largura_m, cor, estoque, estoque_unidade, observacoes)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?)
-                """, (nome, tipo,
-                      unidade,
-                      preco_kg if unidade == "kg" else None,
-                      preco_metro if unidade == "metro" else None,
-                      peso_gsm, largura, cor, estoque, est_un, obs))
-                conn.commit()
-                st.success(f"✅ Tecido **{nome}** cadastrado!")
-                st.rerun()
+                try:
+                    conn.execute("""
+                        INSERT INTO tecidos (nome, tipo, unidade, preco_kg, preco_metro, peso_gsm,
+                                            largura_m, cor, estoque, estoque_unidade, observacoes)
+                        VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                    """, (nome, tipo,
+                          unidade,
+                          preco_kg if unidade == "kg" else None,
+                          preco_metro if unidade == "metro" else None,
+                          peso_gsm, largura, cor, estoque, est_un, obs))
+                    conn.commit()
+                    st.success(f"✅ Tecido **{nome}** cadastrado!")
+                    st.rerun()
+                except Exception as e:
+                    if "UNIQUE" in str(e).upper():
+                        st.error(f"❌ Já existe um tecido com o nome **{nome}**. Escolha outro nome ou edite o existente na aba ✏️ Editar Tecidos.")
+                    else:
+                        st.error(f"Erro ao cadastrar: {e}")
 
     with tab3:
         st.subheader("✏️ Editar Tecidos")
@@ -858,23 +864,30 @@ elif pagina == "🧵 Tecidos":
                 key="edit_tecidos_tab"
             )
             if st.button("💾 Salvar tecidos", key="save_tec_edit", type="primary"):
-                for _, row in edited_tec.iterrows():
-                    conn.execute("""
-                        UPDATE tecidos SET nome=?, tipo=?, unidade=?, preco_kg=?, preco_metro=?,
-                        peso_gsm=?, largura_m=?, cor=?, estoque=?, estoque_unidade=?, ativo=?
-                        WHERE id=?
-                    """, (
-                        row["Nome"], row["Tipo"], row["Unidade"],
-                        float(row["R$/kg"]) if row["R$/kg"] else None,
-                        float(row["R$/metro"]) if row["R$/metro"] else None,
-                        float(row["GSM"]) if row["GSM"] else None,
-                        float(row["Largura m"]), row["Cor"],
-                        float(row["Estoque"]), row["Un. Estoque"],
-                        1 if row["Ativo"] else 0, int(row["ID"])
-                    ))
-                conn.commit()
-                st.success("✅ Tecidos atualizados!")
-                st.rerun()
+                try:
+                    for _, row in edited_tec.iterrows():
+                        conn.execute("""
+                            UPDATE tecidos SET nome=?, tipo=?, unidade=?, preco_kg=?, preco_metro=?,
+                            peso_gsm=?, largura_m=?, cor=?, estoque=?, estoque_unidade=?, ativo=?
+                            WHERE id=?
+                        """, (
+                            row["Nome"], row["Tipo"], row["Unidade"],
+                            float(row["R$/kg"]) if row["R$/kg"] else None,
+                            float(row["R$/metro"]) if row["R$/metro"] else None,
+                            float(row["GSM"]) if row["GSM"] else None,
+                            float(row["Largura m"]), row["Cor"],
+                            float(row["Estoque"]), row["Un. Estoque"],
+                            1 if row["Ativo"] else 0, int(row["ID"])
+                        ))
+                    conn.commit()
+                    st.success("✅ Tecidos atualizados!")
+                    st.rerun()
+                except Exception as e:
+                    conn.rollback()
+                    if "UNIQUE" in str(e).upper():
+                        st.error("❌ Nome duplicado: dois tecidos não podem ter o mesmo nome. Corrija e salve novamente.")
+                    else:
+                        st.error(f"Erro ao salvar: {e}")
 
             # ── Excluir tecido ─────────────────────────────────────────────
             st.divider()

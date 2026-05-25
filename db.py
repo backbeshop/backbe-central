@@ -291,6 +291,9 @@ def init_db():
                     (tec_id, forn_nome)
                 )
 
+    # Garante unicidade do nome (funciona em tabelas já existentes)
+    c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_tecidos_nome ON tecidos(nome)")
+
     conn.commit()
     conn.close()
 
