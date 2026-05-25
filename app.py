@@ -2013,14 +2013,74 @@ elif pagina == "🧶 Produtos":
         custo_eti_np  = c5.number_input("Etiquetas R$/peça", min_value=0.0, step=0.1, value=0.2,  key="np_etiq")
         custo_emb_np  = c6.number_input("Embalagem R$/peça", min_value=0.0, step=0.5, value=10.0, key="np_emb")
 
-        c7, c8 = st.columns(2)
-        custo_adic_np = c7.number_input("Acabamentos/Adicional R$/peça", min_value=0.0, step=0.5, key="np_adic")
+        # ── Acabamentos / Aviamentos ────────────────────────────────────────
+        st.markdown("**🔩 Acabamentos e Aviamentos**")
+
+        acabamentos_db_np = rows_to_list(conn.execute(
+            "SELECT id, nome, preco, unidade, categoria FROM acabamentos WHERE ativo=1 ORDER BY categoria, nome"
+        ).fetchall())
+
+        if "np_aviamentos" not in st.session_state:
+            st.session_state["np_aviamentos"] = []
+
+        if acabamentos_db_np:
+            av1, av2, av3 = st.columns([5, 2, 2])
+            av_opcoes = [f"{a['nome']}  —  R${float(a['preco']):.2f}/{a['unidade']}" for a in acabamentos_db_np]
+            av_sel_i  = av1.selectbox("Selecionar aviamento", range(len(av_opcoes)),
+                                       format_func=lambda i: av_opcoes[i], key="np_av_sel",
+                                       label_visibility="collapsed")
+            av_qtde   = av2.number_input("Qtde", min_value=1, value=1, step=1, key="np_av_qtde",
+                                          label_visibility="collapsed")
+            if av3.button("➕ Adicionar", key="np_av_add"):
+                av_obj = acabamentos_db_np[av_sel_i]
+                existing = next((x for x in st.session_state["np_aviamentos"] if x["id"] == av_obj["id"]), None)
+                if existing:
+                    existing["qtde"] += av_qtde
+                    existing["subtotal"] = round(existing["qtde"] * existing["preco"], 2)
+                else:
+                    st.session_state["np_aviamentos"].append({
+                        "id":       av_obj["id"],
+                        "nome":     av_obj["nome"],
+                        "preco":    float(av_obj["preco"]),
+                        "unidade":  av_obj["unidade"],
+                        "qtde":     av_qtde,
+                        "subtotal": round(av_qtde * float(av_obj["preco"]), 2),
+                    })
+                st.rerun()
+
+            # Lista dos itens selecionados
+            if st.session_state["np_aviamentos"]:
+                for i, av in enumerate(list(st.session_state["np_aviamentos"])):
+                    col_av, col_del = st.columns([10, 1])
+                    col_av.markdown(
+                        f"**{av['qtde']}×** {av['nome']} — "
+                        f"R${av['preco']:.2f}/{av['unidade']} = **R${av['subtotal']:.2f}**"
+                    )
+                    if col_del.button("🗑️", key=f"np_av_del_{i}", help="Remover"):
+                        st.session_state["np_aviamentos"].pop(i)
+                        st.rerun()
+                total_av = sum(av["subtotal"] for av in st.session_state["np_aviamentos"])
+                st.caption(f"💰 Total aviamentos selecionados: **R${total_av:.2f}**")
+            else:
+                st.caption("Nenhum aviamento adicionado ainda.")
+                total_av = 0.0
+        else:
+            st.caption("Nenhum aviamento cadastrado. Vá em **🔩 Acabamentos** para adicionar.")
+            total_av = 0.0
+
+        # Campo extra para custos adicionais não listados
+        custo_adic_extra = st.number_input(
+            "Custo extra não listado R$/peça", min_value=0.0, step=0.5, key="np_adic",
+            help="Custos de acabamento que não estão no cadastro de aviamentos"
+        )
+        custo_adic_np = round(total_av + custo_adic_extra, 2)
+
+        # ── Modelagem e lote ────────────────────────────────────────────────
+        c8, c9 = st.columns(2)
         mod_total_np  = c8.number_input(
             "Modelagem total R$", min_value=0.0, step=50.0, key="np_mod",
             help="Valor total pago pela modelagem — será dividido pelo lote mínimo"
         )
-
-        c9, _ = st.columns(2)
         lote_np      = c9.number_input("Lote mínimo (peças)", min_value=1, value=10, step=1, key="np_lote")
         custo_mod_np = round(mod_total_np / lote_np, 2) if lote_np else 0
 
@@ -2048,6 +2108,7 @@ elif pagina == "🧶 Produtos":
                   custo_eti_np, custo_adic_np, custo_emb_np, custo_mod_np,
                   lote_np, cmv_np, preco_vnd_np, obs_np))
             conn.commit()
+            st.session_state["np_aviamentos"] = []  # limpa lista de aviamentos
             st.success(f"✅ Produto **{nome_np}** cadastrado! CMV: R${cmv_np:.2f}")
             st.rerun()
 
