@@ -294,6 +294,12 @@ def init_db():
     # Garante unicidade do nome (funciona em tabelas já existentes)
     c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_tecidos_nome ON tecidos(nome)")
 
+    # Migração: adiciona coluna de imagem nos aviamentos (se ainda não existir)
+    try:
+        c.execute("ALTER TABLE acabamentos ADD COLUMN imagem_b64 TEXT")
+    except Exception:
+        pass  # coluna já existe
+
     # Aviamentos Backbe — seed persistente (nome, categoria, unidade, preco)
     AVIAMENTOS_SEED = [
         # ── Por unidade ──────────────────────────────────────────────────────

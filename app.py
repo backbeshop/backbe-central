@@ -2127,12 +2127,13 @@ elif pagina == "🔩 Aviamentos":
     tab_cat, tab_novo_a = st.tabs(["📋 Catálogo", "➕ Novo Item"])
 
     with tab_cat:
+        import base64 as _b64
         acabamentos = rows_to_list(conn.execute(
             "SELECT * FROM acabamentos ORDER BY categoria, nome"
         ).fetchall())
 
         if not acabamentos:
-            st.info("Nenhum acabamento cadastrado ainda. Adicione na aba **➕ Novo Item**.")
+            st.info("Nenhum aviamento cadastrado ainda. Adicione na aba **➕ Novo Item**.")
         else:
             by_cat = {}
             for a in acabamentos:
@@ -2140,6 +2141,46 @@ elif pagina == "🔩 Aviamentos":
 
             for cat, items in sorted(by_cat.items()):
                 with st.expander(f"🔸 **{cat.title()}** — {len(items)} item(s)", expanded=True):
+
+                    # ── Grade visual (imagem + nome + preço + upload) ──────
+                    COLS_PER_ROW = 5
+                    rows_items = [items[i:i+COLS_PER_ROW] for i in range(0, len(items), COLS_PER_ROW)]
+                    for row_items in rows_items:
+                        cols = st.columns(COLS_PER_ROW)
+                        for j, a in enumerate(row_items):
+                            with cols[j]:
+                                # Imagem
+                                if a.get("imagem_b64"):
+                                    try:
+                                        img_bytes = _b64.b64decode(a["imagem_b64"])
+                                        st.image(img_bytes, use_container_width=True)
+                                    except Exception:
+                                        st.markdown("🖼️")
+                                else:
+                                    st.markdown(
+                                        "<div style='height:72px;background:#F3F4F6;border-radius:8px;"
+                                        "display:flex;align-items:center;justify-content:center;"
+                                        "font-size:24px'>📦</div>",
+                                        unsafe_allow_html=True
+                                    )
+                                # Nome e preço
+                                st.caption(f"**{a['nome']}**")
+                                st.caption(f"R${float(a['preco'] or 0):.2f}/{a['unidade'] or 'un'}")
+                                # Upload de imagem
+                                up_img = st.file_uploader(
+                                    "📷", type=["jpg","jpeg","png","webp"],
+                                    key=f"img_up_{a['id']}", label_visibility="collapsed"
+                                )
+                                if up_img:
+                                    b64_str = _b64.b64encode(up_img.read()).decode()
+                                    conn.execute("UPDATE acabamentos SET imagem_b64=? WHERE id=?",
+                                                 (b64_str, a["id"]))
+                                    conn.commit()
+                                    st.rerun()
+
+                    st.divider()
+
+                    # ── Editor de valores (preço, nome, ativo) ─────────────
                     df_cat = pd.DataFrame([{
                         "ID": a["id"],
                         "Nome": a["nome"],
