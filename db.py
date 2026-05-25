@@ -259,6 +259,25 @@ def init_db():
         contar INTEGER DEFAULT 1
     )""")
 
+    # Metas do negócio
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS metas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chave TEXT UNIQUE NOT NULL,
+        valor REAL NOT NULL DEFAULT 0,
+        descricao TEXT
+    )""")
+    # Seed metas padrão
+    _METAS_DEFAULT = [
+        ("fat_mensal",      15000.0, "Meta de faturamento mensal (R$)"),
+        ("pedidos_mensal",  60.0,    "Meta de pedidos por mês"),
+        ("clientes_vip",    25.0,    "Meta de clientes VIP"),
+        ("ticket_medio",    220.0,   "Meta de ticket médio (R$)"),
+    ]
+    for _chave, _val, _desc in _METAS_DEFAULT:
+        c.execute("INSERT OR IGNORE INTO metas (chave, valor, descricao) VALUES (?,?,?)",
+                  (_chave, _val, _desc))
+
     # DRE — migração: colunas extras em dre_custos
     for _col, _default in [
         ("faturamento_manual", "NULL"),

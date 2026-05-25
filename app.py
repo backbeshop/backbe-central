@@ -58,101 +58,190 @@ init_db()
 
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
 
-/* ── Base ───────────────────────────────────────────────────── */
+/* ── Reset + Base ───────────────────────────────────────────── */
 html, body, [class*="css"], .stApp, button, input, select, textarea {{
-    font-family: 'Inter', -apple-system, sans-serif !important;
+    font-family: 'DM Sans', -apple-system, sans-serif !important;
 }}
-.stApp {{ background: {BG} !important; }}
+.stApp {{ background: #ECEEF3 !important; }}
 .main .block-container {{
-    padding: 1.6rem 2rem 3rem !important;
-    background: {BG} !important;
+    padding: 1.8rem 2.2rem 3rem !important;
+    background: #ECEEF3 !important;
     max-width: 1440px;
 }}
 
-/* ── Sidebar — branca estilo SaaS ───────────────────────────── */
+/* ── Sidebar dark navy ──────────────────────────────────────── */
 section[data-testid="stSidebar"] > div:first-child,
 section[data-testid="stSidebar"],
 div[data-testid="stSidebarContent"] {{
-    background: #FFFFFF !important;
-    border-right: 1px solid #E5E7EB !important;
+    background: {NAVY} !important;
+    border-right: 0 !important;
 }}
-/* Hide label */
 section[data-testid="stSidebar"] [data-testid="stWidgetLabel"],
 div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] {{
     display: none !important;
 }}
-/* Hide radio circle indicator */
 section[data-testid="stSidebar"] [data-baseweb="radio"] > div:first-child,
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] > div:first-child {{
     display: none !important;
 }}
-/* Radio group column */
 section[data-testid="stSidebar"] [data-baseweb="radio-group"],
 div[data-testid="stSidebarContent"] [data-baseweb="radio-group"] {{
-    gap: 1px !important; display: flex !important; flex-direction: column !important;
+    gap: 2px !important; display: flex !important; flex-direction: column !important;
 }}
-/* Nav item — default */
 section[data-testid="stSidebar"] [data-baseweb="radio"] label,
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] label {{
     width: 100% !important;
-    padding: 9px 14px 9px 14px !important;
-    border-radius: 8px !important;
+    padding: 10px 16px 10px 14px !important;
+    border-radius: 10px !important;
     font-size: 13.5px !important;
     font-weight: 500 !important;
-    color: #6B7280 !important;
+    color: rgba(255,255,255,0.60) !important;
     cursor: pointer !important;
-    transition: all 0.12s ease !important;
+    transition: all 0.14s ease !important;
     display: flex !important;
     align-items: center !important;
     margin: 0 !important;
-    user-select: none !important;
     letter-spacing: -0.01em !important;
 }}
 section[data-testid="stSidebar"] [data-baseweb="radio"] label:hover,
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] label:hover {{
-    background: #F3F4F6 !important;
-    color: #111827 !important;
+    background: rgba(255,255,255,0.08) !important;
+    color: white !important;
 }}
-/* Active nav item */
 section[data-testid="stSidebar"] [data-baseweb="radio"] label:has(input:checked),
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] label:has(input:checked) {{
-    background: {PURPLE}14 !important;
-    color: {PURPLE} !important;
-    font-weight: 600 !important;
+    background: {PINK} !important;
+    color: white !important;
+    font-weight: 700 !important;
 }}
-/* Hide radio input */
 section[data-testid="stSidebar"] [data-baseweb="radio"] input,
 div[data-testid="stSidebarContent"] [data-baseweb="radio"] input {{
     position: absolute !important; opacity: 0 !important;
     width: 0 !important; height: 0 !important;
 }}
-/* Sidebar button */
 section[data-testid="stSidebar"] .stButton > button,
 div[data-testid="stSidebarContent"] .stButton > button {{
-    background: #F9FAFB !important;
-    border: 1px solid #E5E7EB !important;
-    color: #6B7280 !important;
+    background: rgba(255,255,255,0.10) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    color: rgba(255,255,255,0.75) !important;
     border-radius: 8px !important;
     font-size: 12.5px !important;
     font-weight: 600 !important;
-    transition: all 0.12s !important;
 }}
 section[data-testid="stSidebar"] .stButton > button:hover,
 div[data-testid="stSidebarContent"] .stButton > button:hover {{
-    background: #F3F4F6 !important;
-    color: {PURPLE} !important;
-    border-color: {PURPLE}40 !important;
+    background: rgba(255,255,255,0.18) !important;
+    color: white !important;
+    border-color: rgba(255,255,255,0.3) !important;
 }}
 
 /* ── Typography ─────────────────────────────────────────────── */
-h1 {{ color:{NAVY};font-size:20px !important;font-weight:700 !important;margin-bottom:0 !important; }}
-h2 {{ color:{NAVY};font-size:15px !important;font-weight:600 !important; }}
-h3 {{ color:{NAVY};font-size:13px !important;font-weight:600 !important; }}
+h1 {{ color:{NAVY};font-size:22px !important;font-weight:800 !important;
+     margin-bottom:0 !important;letter-spacing:-0.5px !important; }}
+h2 {{ color:{NAVY};font-size:16px !important;font-weight:700 !important; }}
+h3 {{ color:{NAVY};font-size:14px !important;font-weight:600 !important; }}
 
-/* ── Chip tags (weihu style) ─────────────────────────────────── */
-.chip        {{ display:inline-flex;align-items:center;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.01em; }}
+/* ── KPI Card colorido ──────────────────────────────────────── */
+.kcard {{
+    border-radius: 18px;
+    padding: 22px 24px 20px;
+    border: 0;
+    position: relative;
+    overflow: hidden;
+    min-height: 130px;
+}}
+.kcard::before {{
+    content: "";
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+}}
+.kcard-label {{
+    font-size: 11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:0.09em;opacity:0.75;margin-bottom:8px;
+}}
+.kcard-val {{
+    font-size: 34px;font-weight:800;letter-spacing:-1.5px;line-height:1;
+}}
+.kcard-sub {{
+    font-size: 12px;margin-top:10px;opacity:0.70;font-weight:500;
+}}
+.kcard-delta {{
+    display:inline-flex;align-items:center;margin-top:10px;
+    background:rgba(255,255,255,0.25);border-radius:6px;
+    padding:3px 8px;font-size:11px;font-weight:700;
+}}
+
+/* ── White content card ─────────────────────────────────────── */
+.wcard {{
+    background: white;
+    border-radius: 18px;
+    padding: 22px 24px;
+    border: 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}}
+.wcard-title {{
+    font-size: 15px; font-weight: 700; color: {NAVY}; margin-bottom: 4px;
+}}
+.wcard-sub {{
+    font-size: 12px; color: #9CA3AF; font-weight: 400;
+}}
+
+/* ── KPI card branco legado ─────────────────────────────────── */
+.kpi-card {{
+    background: white; border-radius: 18px; padding: 20px 22px 18px;
+    border: 0; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s;
+}}
+.kpi-card:hover {{ box-shadow: 0 6px 24px rgba(0,0,0,0.10); }}
+.kpi-accent {{ width:40px;height:5px;border-radius:99px;margin-bottom:16px; }}
+.kpi-label  {{ font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;
+               letter-spacing:0.09em;margin-bottom:4px; }}
+.kpi-value  {{ font-size:34px;font-weight:800;color:{NAVY};letter-spacing:-0.04em;line-height:1; }}
+.kpi-sub    {{ font-size:12px;margin-top:6px;color:#9CA3AF;font-weight:400; }}
+
+/* ── Progress bar de meta ───────────────────────────────────── */
+.goal-bar-wrap {{
+    margin-top: 14px;
+}}
+.goal-bar-header {{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;font-weight:600;margin-bottom:6px;
+}}
+.goal-bar-bg {{
+    background: rgba(0,0,0,0.10);
+    border-radius: 99px; height: 7px;
+}}
+.goal-bar-fill {{
+    border-radius: 99px; height: 7px;
+    background: rgba(255,255,255,0.85);
+    transition: width 0.6s ease;
+}}
+
+/* ── Progress bar branca (para cards brancos) ───────────────── */
+.pbar-bg {{
+    background: #F3F4F6; border-radius:99px; height:6px; margin-top:6px;
+}}
+.pbar-fill {{
+    border-radius:99px; height:6px;
+    transition: width 0.5s ease;
+}}
+
+/* ── Task / item cards ──────────────────────────────────────── */
+.task-card {{
+    background: white; border-radius: 14px; padding: 16px 18px;
+    border: 0; box-shadow: 0 1px 6px rgba(0,0,0,0.05); margin-bottom: 10px;
+}}
+.task-title {{ font-size:13.5px;font-weight:600;color:{NAVY};line-height:1.4; }}
+.task-note  {{ font-size:12px;color:#9CA3AF;margin-top:4px; }}
+
+/* ── Chip tags ──────────────────────────────────────────────── */
+.chip        {{ display:inline-flex;align-items:center;padding:3px 9px;
+               border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.01em; }}
 .chip-purple {{ background:#EDE9FE;color:#6D28D9; }}
 .chip-pink   {{ background:#FCE7F3;color:#9D174D; }}
 .chip-orange {{ background:#FFEDD5;color:#9A3412; }}
@@ -161,50 +250,9 @@ h3 {{ color:{NAVY};font-size:13px !important;font-weight:600 !important; }}
 .chip-yellow {{ background:#FEF9C3;color:#854D0E; }}
 .chip-gray   {{ background:#F3F4F6;color:#6B7280; }}
 
-/* ── KPI cards — brancos com chip de cor no topo ─────────────── */
-.kpi-card {{
-    background: white;
-    border-radius: 16px;
-    padding: 20px 22px 18px;
-    border: 1px solid #F3F4F6;
-    box-shadow: 0 1px 8px rgba(0,0,0,0.05);
-    transition: box-shadow 0.2s;
-}}
-.kpi-card:hover {{ box-shadow: 0 4px 20px rgba(0,0,0,0.09); }}
-.kpi-accent {{ width:36px;height:5px;border-radius:99px;margin-bottom:16px; }}
-.kpi-label  {{ font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px; }}
-.kpi-value  {{ font-size:32px;font-weight:800;color:{NAVY};letter-spacing:-0.03em;line-height:1; }}
-.kpi-sub    {{ font-size:12px;margin-top:6px;color:#9CA3AF;font-weight:400; }}
-
-/* ── White content cards ─────────────────────────────────────── */
-.wcard {{
-    background: white;
-    border-radius: 16px;
-    padding: 22px 24px;
-    border: 1px solid #F3F4F6;
-    box-shadow: 0 1px 8px rgba(0,0,0,0.04);
-}}
-.wcard-title {{
-    font-size: 14px; font-weight: 700; color: {NAVY}; margin-bottom: 4px;
-}}
-.wcard-sub {{
-    font-size: 12px; color: #9CA3AF; font-weight: 400;
-}}
-
-/* ── Task/item cards (weihu style) ───────────────────────────── */
-.task-card {{
-    background: white;
-    border-radius: 14px;
-    padding: 16px 18px;
-    border: 1px solid #F3F4F6;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
-    margin-bottom: 10px;
-}}
-.task-title {{ font-size:13.5px;font-weight:600;color:{NAVY};line-height:1.4; }}
-.task-note  {{ font-size:12px;color:#9CA3AF;margin-top:4px; }}
-
 /* ── Badges ─────────────────────────────────────────────────── */
-.bb-badge   {{ display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600; }}
+.bb-badge   {{ display:inline-flex;align-items:center;padding:3px 10px;
+              border-radius:99px;font-size:11px;font-weight:600; }}
 .badge-green  {{ background:#DCFCE7;color:#15803D; }}
 .badge-red    {{ background:#FEE2E2;color:#B91C1C; }}
 .badge-yellow {{ background:#FEF9C3;color:#92400E; }}
@@ -214,25 +262,50 @@ h3 {{ color:{NAVY};font-size:13px !important;font-weight:600 !important; }}
 .badge-purple {{ background:#EDE9FE;color:#6D28D9; }}
 
 /* ── Metrics ─────────────────────────────────────────────────── */
-.stMetric {{ background:white;border-radius:14px;padding:16px 18px !important;box-shadow:0 1px 6px rgba(0,0,0,0.05);border:1px solid #F3F4F6; }}
-.stMetric label {{ color:#9CA3AF !important;font-size:11px !important;font-weight:600 !important;text-transform:uppercase;letter-spacing:0.08em; }}
-[data-testid="stMetricValue"] {{ color:{NAVY} !important;font-size:24px !important;font-weight:800 !important; }}
+.stMetric {{
+    background:white;border-radius:14px;padding:18px 20px !important;
+    box-shadow:0 2px 10px rgba(0,0,0,0.06);border:0 !important;
+}}
+.stMetric label {{ color:#9CA3AF !important;font-size:11px !important;
+                   font-weight:700 !important;text-transform:uppercase;letter-spacing:0.09em; }}
+[data-testid="stMetricValue"] {{ color:{NAVY} !important;font-size:26px !important;font-weight:800 !important; }}
 
 /* ── Tabs ────────────────────────────────────────────────────── */
-.stTabs [data-baseweb="tab-list"] {{ background:#F9FAFB;border-radius:10px;padding:3px;border:1px solid #E5E7EB;gap:1px; }}
-.stTabs [data-baseweb="tab"] {{ border-radius:8px !important;font-weight:500 !important;font-size:13px !important;padding:6px 14px !important;color:#6B7280 !important; }}
-.stTabs [aria-selected="true"] {{ background:{PURPLE} !important;color:white !important; }}
+.stTabs [data-baseweb="tab-list"] {{
+    background:#F0F2F5;border-radius:12px;padding:4px;border:0;gap:2px;
+}}
+.stTabs [data-baseweb="tab"] {{
+    border-radius:9px !important;font-weight:500 !important;
+    font-size:13px !important;padding:7px 16px !important;color:#6B7280 !important;
+}}
+.stTabs [aria-selected="true"] {{
+    background:white !important;color:{NAVY} !important;
+    font-weight:700 !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08) !important;
+}}
 
 /* ── Buttons ─────────────────────────────────────────────────── */
-.stButton > button {{ border-radius:8px !important;font-weight:600 !important;font-size:13px !important; }}
-.stButton > button[kind="primary"] {{ background:{PURPLE} !important;color:white !important;border:none !important; }}
-.stButton > button[kind="secondary"] {{ border:1px solid #E5E7EB !important;color:{NAVY} !important;background:#F9FAFB !important; }}
+.stButton > button {{
+    border-radius:10px !important;font-weight:600 !important;font-size:13px !important;
+    border:0 !important;
+}}
+.stButton > button[kind="primary"] {{
+    background:{PINK} !important;color:white !important;
+}}
+.stButton > button[kind="secondary"] {{
+    border:1px solid #E5E7EB !important;color:{NAVY} !important;
+    background:white !important;
+}}
 
 /* ── Misc ────────────────────────────────────────────────────── */
-.stDataFrame {{ border-radius:12px !important;overflow:hidden !important; }}
-.stAlert {{ border-radius:10px !important; }}
-.streamlit-expanderHeader {{ border-radius:8px !important;font-weight:500 !important; }}
-hr {{ border-color:#F3F4F6 !important; }}
+.stDataFrame {{ border-radius:14px !important;overflow:hidden !important;
+               box-shadow:0 2px 8px rgba(0,0,0,0.05) !important; }}
+.stAlert {{ border-radius:12px !important; }}
+.streamlit-expanderHeader {{
+    border-radius:10px !important;font-weight:600 !important;
+    background:white !important;
+}}
+hr {{ border-color:#E8EAF0 !important; }}
 
 /* ── CRM pills ───────────────────────────────────────────────── */
 .pill-vip  {{ background:#FEF9C3;color:#713F12;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600; }}
@@ -240,11 +313,22 @@ hr {{ border-color:#F3F4F6 !important; }}
 .pill-reat {{ background:#FFEDD5;color:#9A3412;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600; }}
 .pill-perd {{ background:#F3F4F6;color:#6B7280;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600; }}
 
+/* ── Input / select / number_input ─────────────────────────── */
+.stTextInput input, .stNumberInput input, .stSelectbox [data-baseweb="select"] {{
+    border-radius: 10px !important;
+    border: 1.5px solid #E5E7EB !important;
+    background: white !important;
+}}
+.stTextInput input:focus, .stNumberInput input:focus {{
+    border-color: {PINK} !important;
+    box-shadow: 0 0 0 3px rgba(201,107,160,0.15) !important;
+}}
+
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 768px) {{
-  .main .block-container {{ padding: 0.8rem 0.6rem 2rem !important; }}
-  .kpi-card {{ padding: 16px 16px 14px; }}
-  .kpi-value {{ font-size: 26px; }}
+  .main .block-container {{ padding: 0.8rem 0.8rem 2rem !important; }}
+  .kcard {{ min-height: 110px; padding: 16px 18px 14px; }}
+  .kcard-val {{ font-size: 26px; }}
   .wcard {{ padding: 16px 16px; }}
 }}
 </style>
@@ -253,46 +337,52 @@ hr {{ border-color:#F3F4F6 !important; }}
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(f"""
-<div style="padding:6px 0 18px 0">
+<div style="padding:8px 4px 22px 4px">
   <div style="display:flex;align-items:center;gap:10px">
-    <div style="width:38px;height:38px;background:{PURPLE};
-                border-radius:10px;display:flex;align-items:center;justify-content:center;
-                font-size:20px;flex-shrink:0">⭐</div>
+    <div style="width:40px;height:40px;
+                background:linear-gradient(135deg,{PINK},{GOLD});
+                border-radius:12px;display:flex;align-items:center;
+                justify-content:center;flex-shrink:0">
+      <span style="font-size:18px;color:white;font-weight:900">B</span>
+    </div>
     <div>
-      <div style="font-size:17px;font-weight:800;color:#111827;letter-spacing:-0.5px;line-height:1.1">Backbe</div>
-      <div style="font-size:9px;color:#9CA3AF;font-weight:700;
-                  text-transform:uppercase;letter-spacing:0.15em;margin-top:1px">Central</div>
+      <div style="font-size:18px;font-weight:800;color:white;
+                  letter-spacing:-0.5px;line-height:1.1">Backbe</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.45);font-weight:700;
+                  text-transform:uppercase;letter-spacing:0.18em;margin-top:1px">CENTRAL</div>
     </div>
   </div>
 </div>
-<div style="margin-bottom:4px">
-  <div style="font-size:10px;font-weight:700;color:#D1D5DB;text-transform:uppercase;
-              letter-spacing:0.12em;padding:0 6px;margin-bottom:4px">Visão Geral</div>
-</div>
+<div style="font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.35);
+            text-transform:uppercase;letter-spacing:0.14em;padding:0 6px;
+            margin-bottom:6px">Visao Geral</div>
 """, unsafe_allow_html=True)
-    pagina = st.radio("Navegação", [
-        "📊 Dashboard",
-        "📅 Calendário",
-        "🧶 Produtos",
-        "👥 CRM — Clientes",
-        "🧵 Tecidos",
-        "🔩 Aviamentos",
-        "🏭 Ordens de Produção",
-        "💰 Calculadora CMV",
-        "💳 Financeiro",
-        "📈 Crescimento",
-        "👩 Relatório Mãe",
-        "📄 Declaração MEI",
+    pagina = st.radio("nav", [
+        "◆ Dashboard",
+        "▷ Calendario",
+        "▦ Produtos",
+        "◎ CRM — Clientes",
+        "≋ Tecidos",
+        "⊕ Aviamentos",
+        "⊞ Ordens de Producao",
+        "◇ Calculadora CMV",
+        "▣ Financeiro",
+        "↗ Crescimento",
+        "◉ Relatorio Mae",
+        "⊛ Declaracao MEI",
     ], label_visibility="collapsed")
     st.markdown("""
-<div style="height:1px;background:#F3F4F6;margin:12px 0 8px 0"></div>
-<div style="font-size:10px;font-weight:700;color:#D1D5DB;text-transform:uppercase;
-            letter-spacing:0.12em;padding:0 6px;margin-bottom:4px">Configurações</div>
+<div style="height:1px;background:rgba(255,255,255,0.10);margin:12px 0 10px 0"></div>
+<div style="font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.35);
+            text-transform:uppercase;letter-spacing:0.14em;padding:0 6px;
+            margin-bottom:6px">Configuracoes</div>
 """, unsafe_allow_html=True)
-    if st.button("🔄 Atualizar Nuvemshop", use_container_width=True):
+    if st.button("↺  Atualizar Nuvemshop", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
-    st.markdown("""<div style="font-size:11px;color:#D1D5DB;text-align:center;margin-top:5px">dados atualizados a cada 1h</div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="font-size:11px;color:rgba(255,255,255,0.30);
+                               text-align:center;margin-top:6px">dados atualizados a cada 1h</div>""",
+                unsafe_allow_html=True)
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 @st.cache_data(ttl=3600, show_spinner="Buscando pedidos na Nuvemshop...")
@@ -312,11 +402,11 @@ with st.spinner("Conectando à Nuvemshop..."):
         ns_ok = False
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  PÁGINA 1 — DASHBOARD  (visão geral da empresa)
+#  PAGINA 1 — DASHBOARD
 # ══════════════════════════════════════════════════════════════════════════════
-if pagina == "📊 Dashboard":
+if pagina == "◆ Dashboard":
 
-    # ── Métricas base ────────────────────────────────────────────────────────
+    # ── métricas base ────────────────────────────────────────────────────────
     total_rev    = sum(d["revenue"] for d in ns_monthly.values())
     total_orders = len(ns_orders)
     ticket_medio = total_rev / total_orders if total_orders else 0
@@ -326,7 +416,6 @@ if pagina == "📊 Dashboard":
     delta_pct = ((rev_atual - rev_ant) / rev_ant * 100) if rev_ant else 0
     delta_icon  = "↑" if delta_pct >= 0 else "↓"
     delta_color = "#16A34A" if delta_pct >= 0 else "#DC2626"
-    delta_bg    = "#DCFCE7" if delta_pct >= 0 else "#FEE2E2"
 
     segs = {"VIP": 0, "Ativo": 0, "Reativar": 0, "Perdido": 0}
     for c in ns_customers:
@@ -339,319 +428,512 @@ if pagina == "📊 Dashboard":
     n_urgentes = conn_d.execute(
         "SELECT COUNT(*) FROM ordens_producao WHERE prioridade='urgente' AND status != 'pronto'"
     ).fetchone()[0]
+
+    # ── metas ────────────────────────────────────────────────────────────────
+    metas_rows = rows_to_list(conn_d.execute("SELECT chave, valor FROM metas").fetchall())
+    metas = {r["chave"]: r["valor"] for r in metas_rows}
     conn_d.close()
     total_em_prod = sum(o["cnt"] for o in ordens_raw)
 
-    # ── Header ───────────────────────────────────────────────────────────────
-    MESES_PT = ["janeiro","fevereiro","março","abril","maio","junho",
-                "julho","agosto","setembro","outubro","novembro","dezembro"]
+    meta_fat   = metas.get("fat_mensal", 15000)
+    meta_ped   = metas.get("pedidos_mensal", 60)
+    meta_vip   = metas.get("clientes_vip", 25)
+    meta_ticket= metas.get("ticket_medio", 220)
+
+    # progresso mês atual
+    ped_mes = ns_monthly.get(months_sorted[-1], {}).get("orders", 0) if months_sorted else 0
+    prog_fat    = min(rev_atual / meta_fat * 100, 100) if meta_fat else 0
+    prog_ped    = min(ped_mes  / meta_ped  * 100, 100) if meta_ped else 0
+    prog_vip    = min(segs["VIP"] / meta_vip * 100, 100) if meta_vip else 0
+    prog_ticket = min(ticket_medio / meta_ticket * 100, 100) if meta_ticket else 0
+
+    # ── header ───────────────────────────────────────────────────────────────
+    MESES_PT_D = ["janeiro","fevereiro","marco","abril","maio","junho",
+                  "julho","agosto","setembro","outubro","novembro","dezembro"]
     hoje = datetime.now()
     hora = hoje.hour
     saudacao = "Bom dia" if hora < 12 else ("Boa tarde" if hora < 18 else "Boa noite")
     st.markdown(f"""
 <div style="display:flex;justify-content:space-between;align-items:center;
-            margin-bottom:24px;flex-wrap:wrap;gap:12px">
+            margin-bottom:28px;flex-wrap:wrap;gap:12px">
   <div>
-    <div style="font-size:13px;color:#9CA3AF;font-weight:500;margin-bottom:2px">
-      {saudacao}, <strong style="color:{NAVY}">Isabela</strong> 👋
+    <div style="font-size:13px;color:#6B7280;font-weight:500;margin-bottom:3px">
+      {saudacao}, <strong style="color:{NAVY}">Isabela</strong>
     </div>
-    <div style="font-size:22px;font-weight:800;color:{NAVY};letter-spacing:-0.5px;line-height:1.2">
-      Visão Geral do Negócio
+    <div style="font-size:26px;font-weight:800;color:{NAVY};
+                letter-spacing:-0.8px;line-height:1.15">
+      Visao Geral do Negocio
     </div>
-    <div style="font-size:12px;color:#9CA3AF;margin-top:3px">
-      {hoje.strftime('%A, %d')} de {MESES_PT[hoje.month-1]} de {hoje.year}
+    <div style="font-size:12px;color:#9CA3AF;margin-top:4px">
+      {hoje.strftime('%d')} de {MESES_PT_D[hoje.month-1]} de {hoje.year}
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px">
-    <div style="background:white;border:1px solid #E5E7EB;border-radius:10px;
-                padding:7px 16px;display:flex;align-items:center;gap:7px">
-      <div style="width:7px;height:7px;background:#10B981;border-radius:50%"></div>
-      <span style="font-size:12px;color:#374151;font-weight:500">Nuvemshop conectada</span>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);
+                padding:8px 16px;display:flex;align-items:center;gap:8px">
+      <div style="width:8px;height:8px;background:#10B981;border-radius:50%"></div>
+      <span style="font-size:12px;color:#374151;font-weight:600">Nuvemshop conectada</span>
+    </div>
+    <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);
+                padding:8px 16px">
+      <span style="font-size:12px;color:#374151;font-weight:600">
+        Meta do mes: <strong style="color:{PINK}">R${meta_fat:,.0f}</strong>
+      </span>
     </div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
-    # ── LINHA 1: 4 KPIs estilo weihu ─────────────────────────────────────────
+    # ── LINHA 1: 4 KPI cards coloridos ───────────────────────────────────────
     k1, k2, k3, k4 = st.columns(4, gap="medium")
-    total_k = total_rev / 1000
+
+    def _pbar_goal(label, pct, color="rgba(255,255,255,0.85)"):
+        w = max(4, round(pct))
+        return f"""
+<div class="goal-bar-wrap">
+  <div class="goal-bar-header">
+    <span>{label}</span>
+    <span>{pct:.0f}%</span>
+  </div>
+  <div class="goal-bar-bg">
+    <div class="goal-bar-fill" style="width:{w}%;background:{color}"></div>
+  </div>
+</div>"""
 
     with k1:
         st.markdown(f"""
-<div class="kpi-card">
-  <div class="kpi-accent" style="background:#F59E0B"></div>
-  <div class="kpi-label">💰 Faturamento total</div>
-  <div class="kpi-value">R${total_k:.1f}k</div>
-  <div class="kpi-sub">histórico Nuvemshop</div>
+<div class="kcard" style="background:linear-gradient(135deg,#C96BA0,#a84f87);color:white">
+  <div class="kcard-label">Faturamento — Mes Atual</div>
+  <div class="kcard-val">R${rev_atual/1000:.1f}k</div>
+  <div class="kcard-sub">Meta R${meta_fat/1000:.0f}k</div>
+  {_pbar_goal(f"R${rev_atual:,.0f} de R${meta_fat:,.0f}", prog_fat)}
+  <div class="kcard-delta">{delta_icon} {abs(delta_pct):.1f}% vs anterior</div>
 </div>
 """, unsafe_allow_html=True)
 
     with k2:
         st.markdown(f"""
-<div class="kpi-card">
-  <div class="kpi-accent" style="background:#10B981"></div>
-  <div class="kpi-label">📦 Pedidos</div>
-  <div class="kpi-value">{total_orders}</div>
-  <div class="kpi-sub">ticket médio R${ticket_medio:.0f}</div>
+<div class="kcard" style="background:linear-gradient(135deg,#1a2f4a,#2d4d75);color:white">
+  <div class="kcard-label">Pedidos — Total Historico</div>
+  <div class="kcard-val">{total_orders}</div>
+  <div class="kcard-sub">Meta mensal: {int(meta_ped)} pedidos</div>
+  {_pbar_goal(f"{ped_mes} de {int(meta_ped)} este mes", prog_ped)}
+  <div class="kcard-delta">ticket medio R${ticket_medio:.0f}</div>
 </div>
 """, unsafe_allow_html=True)
 
     with k3:
         st.markdown(f"""
-<div class="kpi-card">
-  <div class="kpi-accent" style="background:{PINK}"></div>
-  <div class="kpi-label">👥 Clientes</div>
-  <div class="kpi-value">{len(ns_customers)}</div>
-  <div class="kpi-sub">⭐ {segs['VIP']} VIP · {segs['Reativar']} reativar</div>
+<div class="kcard" style="background:linear-gradient(135deg,#b8860b,#d4a017);color:white">
+  <div class="kcard-label">Clientes VIP</div>
+  <div class="kcard-val">{segs['VIP']}</div>
+  <div class="kcard-sub">Meta: {int(meta_vip)} clientes VIP</div>
+  {_pbar_goal(f"{segs['VIP']} de {int(meta_vip)}", prog_vip)}
+  <div class="kcard-delta">{segs['Reativar']} para reativar</div>
 </div>
 """, unsafe_allow_html=True)
 
     with k4:
-        delta_bg2   = "#DCFCE7" if delta_pct >= 0 else "#FEE2E2"
-        delta_col2  = "#15803D" if delta_pct >= 0 else "#B91C1C"
         st.markdown(f"""
-<div class="kpi-card">
-  <div class="kpi-accent" style="background:{PURPLE}"></div>
-  <div class="kpi-label">📈 Este mês</div>
-  <div class="kpi-value">R${rev_atual/1000:.1f}k</div>
-  <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
-    <span style="background:{delta_bg2};color:{delta_col2};padding:2px 8px;
-                 border-radius:6px;font-size:11px;font-weight:700">{delta_icon}{abs(delta_pct):.1f}%</span>
-    <span class="kpi-sub" style="margin-top:0">vs anterior</span>
-  </div>
+<div class="kcard" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white">
+  <div class="kcard-label">Ticket Medio</div>
+  <div class="kcard-val">R${ticket_medio:.0f}</div>
+  <div class="kcard-sub">Meta: R${meta_ticket:.0f}</div>
+  {_pbar_goal(f"R${ticket_medio:.0f} de R${meta_ticket:.0f}", prog_ticket)}
+  <div class="kcard-delta">{len(ns_customers)} clientes total</div>
 </div>
 """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height:18px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
 
-    # ── LINHA 2: Gráfico principal (65%) + Alertas rápidos (35%) ─────────────
+    # ── LINHA 2: gráfico faturamento + alertas ────────────────────────────────
     chart_col, alert_col = st.columns([6.5, 3.5], gap="large")
 
     with chart_col:
         st.markdown(f"""
 <div class="wcard" style="padding-bottom:6px">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
     <div>
       <div class="wcard-title">Faturamento mensal</div>
-      <div class="wcard-sub">Receita bruta por mês</div>
+      <div class="wcard-sub">Receita bruta — todos os meses</div>
     </div>
-    <span style="background:#F3F4F6;color:#6B7280;padding:4px 12px;border-radius:8px;
-                 font-size:11px;font-weight:600;border:1px solid #E5E7EB">Todos os meses</span>
+    <span style="background:#F0F2F5;color:#6B7280;padding:5px 14px;
+                 border-radius:10px;font-size:11px;font-weight:700">
+      R${total_rev/1000:.1f}k total
+    </span>
   </div>
 """, unsafe_allow_html=True)
         if ns_monthly:
             df_monthly = pd.DataFrame([
-                {"Mês": m[5:] + "/" + m[2:4], "Receita": d["revenue"]}
+                {"Mes": m[5:] + "/" + m[2:4], "Receita": d["revenue"],
+                 "Pedidos": d.get("orders", 0)}
                 for m, d in sorted(ns_monthly.items())
             ])
             fig_area = go.Figure()
             fig_area.add_trace(go.Scatter(
-                x=df_monthly["Mês"], y=df_monthly["Receita"],
-                fill="tozeroy",
-                fillcolor="rgba(201,107,160,0.08)",
-                line=dict(color=PINK, width=2.5),
+                x=df_monthly["Mes"], y=df_monthly["Receita"],
+                fill="tozeroy", fillcolor="rgba(201,107,160,0.10)",
+                line=dict(color=PINK, width=3),
                 mode="lines",
-                hovertemplate="R$%{y:,.0f}<extra></extra>",
+                name="Faturamento",
+                hovertemplate="<b>R$%{y:,.0f}</b><extra></extra>",
             ))
             fig_area.add_trace(go.Scatter(
-                x=df_monthly["Mês"], y=df_monthly["Receita"],
+                x=df_monthly["Mes"], y=df_monthly["Receita"],
                 mode="markers",
-                marker=dict(color=PINK, size=6, line=dict(color="white", width=2)),
+                marker=dict(color="white", size=7,
+                            line=dict(color=PINK, width=2.5)),
                 showlegend=False, hoverinfo="skip",
             ))
-            fig_area.update_layout(
-                height=250,
-                margin=dict(t=16, b=16, l=4, r=4),
-                plot_bgcolor="white",
-                paper_bgcolor="white",
-                xaxis=dict(showgrid=False, tickfont=dict(size=11, color="#98A2B3"), tickangle=-30),
-                yaxis=dict(showgrid=True, gridcolor="#F5F0E8", tickprefix="R$",
-                           tickfont=dict(size=10, color="#98A2B3"), gridwidth=1),
-                showlegend=False,
+            # linha de meta
+            fig_area.add_hline(
+                y=meta_fat, line_dash="dot", line_color=GOLD,
+                line_width=1.5,
+                annotation_text=f"Meta R${meta_fat/1000:.0f}k",
+                annotation_font_size=10,
+                annotation_font_color=GOLD,
             )
-            st.plotly_chart(fig_area, width="stretch")
+            fig_area.update_layout(
+                height=260,
+                margin=dict(t=16, b=16, l=4, r=4),
+                plot_bgcolor="white", paper_bgcolor="white",
+                xaxis=dict(showgrid=False,
+                           tickfont=dict(size=11, color="#98A2B3",
+                                         family="DM Sans"),
+                           tickangle=-30),
+                yaxis=dict(showgrid=True, gridcolor="#F0F2F5",
+                           tickprefix="R$",
+                           tickfont=dict(size=10, color="#98A2B3",
+                                          family="DM Sans"),
+                           gridwidth=1),
+                showlegend=False,
+                font=dict(family="DM Sans"),
+            )
+            st.plotly_chart(fig_area, use_container_width=True)
         else:
-            st.markdown('<div style="padding:40px 0;text-align:center;color:#98A2B3;font-size:13px">Sem dados mensais ainda.</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div style="padding:50px 0;text-align:center;'
+                'color:#9CA3AF;font-size:13px">Sem dados ainda.</div>',
+                unsafe_allow_html=True,
+            )
         st.markdown("</div>", unsafe_allow_html=True)
 
     with alert_col:
+        n_items = sum(1 for x in [segs['Reativar'], total_em_prod, segs['VIP']] if x > 0)
+        badge_color = PINK if n_urgentes > 0 else "#6B7280"
         st.markdown(f"""
-<div class="wcard" style="display:flex;flex-direction:column;gap:0;height:100%">
-
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-    <div class="wcard-title">Atenção</div>
-    <span style="background:#EDE9FE;color:{PURPLE};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600">3 itens</span>
+<div class="wcard" style="height:100%">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+    <div class="wcard-title">Atencao necessaria</div>
+    <span style="background:#FEE2E2;color:#B91C1C;padding:3px 10px;
+                 border-radius:6px;font-size:11px;font-weight:700">{n_urgentes} urgentes</span>
   </div>
 
-  <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F3F4F6">
-    <div style="width:38px;height:38px;background:#FCE7F3;border-radius:10px;flex-shrink:0;
-                display:flex;align-items:center;justify-content:center;font-size:18px">📩</div>
-    <div style="flex:1">
-      <div style="font-size:11px;color:#9CA3AF;font-weight:600;text-transform:uppercase;letter-spacing:0.07em">Para Reativar</div>
-      <div style="font-size:22px;font-weight:800;color:{NAVY};line-height:1.2;margin-top:1px">{segs['Reativar']}</div>
-      <div style="font-size:11px;color:#9CA3AF">clientes 60–180 dias</div>
+  <div style="padding:14px 0;border-bottom:1px solid #F0F2F5">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:42px;height:42px;
+                  background:linear-gradient(135deg,#FCE7F3,#f9d0ea);
+                  border-radius:12px;flex-shrink:0;display:flex;
+                  align-items:center;justify-content:center;
+                  font-size:19px;font-weight:800;color:{PINK}">◎</div>
+      <div style="flex:1">
+        <div style="font-size:11px;color:#9CA3AF;font-weight:700;
+                    text-transform:uppercase;letter-spacing:0.07em">Para Reativar</div>
+        <div style="font-size:28px;font-weight:800;color:{NAVY};line-height:1.1;margin-top:2px">{segs['Reativar']}</div>
+        <div style="font-size:11px;color:#9CA3AF">clientes 60-180 dias</div>
+      </div>
+      <span class="chip chip-pink">reativar</span>
     </div>
-    <span class="chip chip-pink">reativar</span>
-  </div>
-
-  <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F3F4F6">
-    <div style="width:38px;height:38px;background:#FEF9C3;border-radius:10px;flex-shrink:0;
-                display:flex;align-items:center;justify-content:center;font-size:18px">🏭</div>
-    <div style="flex:1">
-      <div style="font-size:11px;color:#9CA3AF;font-weight:600;text-transform:uppercase;letter-spacing:0.07em">Em Produção</div>
-      <div style="font-size:22px;font-weight:800;color:{NAVY};line-height:1.2;margin-top:1px">{total_em_prod}</div>
-      <div style="font-size:11px;color:#9CA3AF">{n_urgentes} urgente(s) na fila</div>
+    <div class="pbar-bg" style="margin-top:10px">
+      <div class="pbar-fill" style="width:{min(segs['Reativar']/max(len(ns_customers),1)*100,100):.0f}%;
+                                    background:{PINK}"></div>
     </div>
-    <span class="chip chip-yellow">ordens</span>
   </div>
 
-  <div style="display:flex;align-items:center;gap:12px;padding:12px 0 0">
-    <div style="width:38px;height:38px;background:#DCFCE7;border-radius:10px;flex-shrink:0;
-                display:flex;align-items:center;justify-content:center;font-size:18px">⭐</div>
-    <div style="flex:1">
-      <div style="font-size:11px;color:#9CA3AF;font-weight:600;text-transform:uppercase;letter-spacing:0.07em">Clientes VIP</div>
-      <div style="font-size:22px;font-weight:800;color:{NAVY};line-height:1.2;margin-top:1px">{segs['VIP']}</div>
-      <div style="font-size:11px;color:#9CA3AF">3+ pedidos ou R$500+</div>
+  <div style="padding:14px 0;border-bottom:1px solid #F0F2F5">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:42px;height:42px;
+                  background:linear-gradient(135deg,#FEF9C3,#fef3a7);
+                  border-radius:12px;flex-shrink:0;display:flex;
+                  align-items:center;justify-content:center;
+                  font-size:19px;font-weight:800;color:#92400E">⊞</div>
+      <div style="flex:1">
+        <div style="font-size:11px;color:#9CA3AF;font-weight:700;
+                    text-transform:uppercase;letter-spacing:0.07em">Em Producao</div>
+        <div style="font-size:28px;font-weight:800;color:{NAVY};line-height:1.1;margin-top:2px">{total_em_prod}</div>
+        <div style="font-size:11px;color:#9CA3AF">{n_urgentes} urgente(s) na fila</div>
+      </div>
+      <span class="chip chip-yellow">ordens</span>
     </div>
-    <span class="chip chip-green">VIP</span>
   </div>
 
+  <div style="padding:14px 0 0">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:42px;height:42px;
+                  background:linear-gradient(135deg,#DCFCE7,#bbf7d0);
+                  border-radius:12px;flex-shrink:0;display:flex;
+                  align-items:center;justify-content:center;
+                  font-size:19px;font-weight:800;color:#15803D">◆</div>
+      <div style="flex:1">
+        <div style="font-size:11px;color:#9CA3AF;font-weight:700;
+                    text-transform:uppercase;letter-spacing:0.07em">Clientes VIP</div>
+        <div style="font-size:28px;font-weight:800;color:{NAVY};line-height:1.1;margin-top:2px">{segs['VIP']}</div>
+        <div style="font-size:11px;color:#9CA3AF">meta: {int(meta_vip)} VIPs</div>
+      </div>
+      <span class="chip chip-green">VIP</span>
+    </div>
+    <div class="pbar-bg" style="margin-top:10px">
+      <div class="pbar-fill" style="width:{prog_vip:.0f}%;background:#10B981"></div>
+    </div>
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
-    # ── LINHA 3: Top Produtos | Segmentos clientes | Tamanhos ─────────────────
-    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
-    b1, b2, b3 = st.columns([4.6, 2.7, 2.7], gap="large")
+    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+
+    # ── LINHA 3: Top Produtos + Segmentos + Metas editaveis ───────────────────
+    b1, b2, b3 = st.columns([4.5, 2.8, 2.7], gap="large")
 
     with b1:
         st.markdown(f"""
 <div class="wcard">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-    <div class="wcard-title">🏆 Top Produtos</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div>
+      <div class="wcard-title">Top Produtos</div>
+      <div class="wcard-sub">Receita acumulada por produto</div>
+    </div>
     <span class="chip chip-gray">{len(ns_products)} produtos</span>
   </div>
 """, unsafe_allow_html=True)
         for i, p in enumerate(ns_products[:8]):
             pct = p["revenue"] / total_rev * 100 if total_rev else 0
-            bar_w = max(6, int(pct * 3.2))
-            rank_bg   = PINK if i < 3 else "#E5E7EB"
+            bar_w = max(4, int(pct * 3.2))
+            rank_bg    = PINK if i == 0 else (GOLD if i == 1 else (NAVY if i == 2 else "#E5E7EB"))
             rank_color = "white" if i < 3 else "#6B7280"
             st.markdown(f"""
-  <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F7F5F3">
-    <span style="min-width:22px;height:22px;background:{rank_bg};color:{rank_color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">{i+1}</span>
+  <div style="display:flex;align-items:center;gap:10px;
+              padding:9px 0;border-bottom:1px solid #F0F2F5">
+    <span style="min-width:24px;height:24px;background:{rank_bg};
+                 color:{rank_color};border-radius:50%;display:flex;
+                 align-items:center;justify-content:center;
+                 font-size:11px;font-weight:800;flex-shrink:0">{i+1}</span>
     <div style="flex:1;min-width:0">
-      <div style="font-size:12px;font-weight:600;color:{NAVY};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{p['produto'][:36]}</div>
-      <div style="background:#F3F4F6;border-radius:99px;height:4px;margin-top:5px">
-        <div style="width:{bar_w}%;background:{PINK};border-radius:99px;height:4px"></div>
+      <div style="font-size:12.5px;font-weight:600;color:{NAVY};
+                  white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        {p['produto'][:38]}
+      </div>
+      <div class="pbar-bg" style="margin-top:5px">
+        <div class="pbar-fill" style="width:{bar_w}%;
+          background:{'linear-gradient(90deg,'+PINK+',#e891c1)' if i==0 else (
+          'linear-gradient(90deg,'+GOLD+',#d4a017)' if i==1 else
+          '#CBD5E1')}"></div>
       </div>
     </div>
     <div style="text-align:right;flex-shrink:0">
-      <div style="font-size:12px;font-weight:700;color:{NAVY}">R${p['revenue']:,.0f}</div>
-      <div style="font-size:10px;color:#9CA3AF">{p['units']} un · {pct:.0f}%</div>
+      <div style="font-size:12.5px;font-weight:700;color:{NAVY}">R${p['revenue']:,.0f}</div>
+      <div style="font-size:10.5px;color:#9CA3AF">{p['units']} un · {pct:.0f}%</div>
     </div>
   </div>
 """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     with b2:
-        st.markdown(f"""<div class="bb-card">
-  <div style="font-size:15px;font-weight:700;color:{NAVY};margin-bottom:8px">👥 Saúde da base</div>
+        st.markdown(f"""
+<div class="wcard">
+  <div class="wcard-title" style="margin-bottom:4px">Saude da Base</div>
+  <div class="wcard-sub" style="margin-bottom:8px">Segmentacao de clientes</div>
 """, unsafe_allow_html=True)
         if ns_customers:
             fig_seg = go.Figure(go.Pie(
                 labels=list(segs.keys()),
                 values=list(segs.values()),
-                hole=0.58,
-                marker_colors=["#EAB308","#22C55E","#F97316","#D1D5DB"],
+                hole=0.60,
+                marker_colors=[GOLD, "#22C55E", PINK, "#D1D5DB"],
                 textinfo="none",
+                hovertemplate="<b>%{label}</b>: %{value}<extra></extra>",
             ))
             fig_seg.update_layout(
                 margin=dict(t=4, b=4, l=4, r=4),
-                height=155,
+                height=160,
                 paper_bgcolor="rgba(0,0,0,0)",
                 showlegend=False,
                 annotations=[dict(
-                    text=f"<b>{len(ns_customers)}</b><br><span style='font-size:10px'>clientes</span>",
+                    text=f"<b>{len(ns_customers)}</b><br><span>clientes</span>",
                     x=0.5, y=0.5, font_size=14, font_color=NAVY,
-                    showarrow=False
+                    showarrow=False, font=dict(family="DM Sans")
                 )]
             )
-            st.plotly_chart(fig_seg, width="stretch")
-        st.markdown(f"""
-  <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#FEF9C3;border-radius:8px">
-      <span style="font-size:12px;font-weight:600;color:#713F12">⭐ VIP</span>
-      <span style="font-size:13px;font-weight:700;color:{NAVY}">{segs['VIP']}</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#DCFCE7;border-radius:8px">
-      <span style="font-size:12px;font-weight:600;color:#15803D">✅ Ativos</span>
-      <span style="font-size:13px;font-weight:700;color:{NAVY}">{segs['Ativo']}</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#FED7AA;border-radius:8px">
-      <span style="font-size:12px;font-weight:600;color:#92400E">🔔 Reativar</span>
-      <span style="font-size:13px;font-weight:700;color:{NAVY}">{segs['Reativar']}</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#F3F4F6;border-radius:8px">
-      <span style="font-size:12px;font-weight:600;color:#6B7280">❌ Perdidos</span>
-      <span style="font-size:13px;font-weight:700;color:{NAVY}">{segs['Perdido']}</span>
-    </div>
+            st.plotly_chart(fig_seg, use_container_width=True)
+        segs_data = [
+            ("VIP",      segs['VIP'],      "#FEF9C3","#713F12", "◆"),
+            ("Ativos",   segs['Ativo'],    "#DCFCE7","#15803D", "●"),
+            ("Reativar", segs['Reativar'], "#FFEDD5","#92400E", "▲"),
+            ("Perdidos", segs['Perdido'],  "#F3F4F6","#6B7280", "▪"),
+        ]
+        st.markdown(
+            '<div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">',
+            unsafe_allow_html=True)
+        for lbl, val, bg, fg, sym in segs_data:
+            st.markdown(f"""
+  <div style="display:flex;justify-content:space-between;align-items:center;
+              padding:6px 10px;background:{bg};border-radius:8px">
+    <span style="font-size:12px;font-weight:700;color:{fg}">{sym} {lbl}</span>
+    <span style="font-size:13px;font-weight:800;color:{NAVY}">{val}</span>
   </div>
-</div>
 """, unsafe_allow_html=True)
+        st.markdown("</div></div>", unsafe_allow_html=True)
 
     with b3:
+        conn_meta = get_conn()
+        st.markdown(f"""
+<div class="wcard">
+  <div class="wcard-title" style="margin-bottom:4px">Metas do Mes</div>
+  <div class="wcard-sub" style="margin-bottom:12px">Clique para editar</div>
+""", unsafe_allow_html=True)
+        _meta_cfg = [
+            ("fat_mensal",     "Faturamento",  f"R${meta_fat:,.0f}",    prog_fat,   PINK),
+            ("pedidos_mensal", "Pedidos",       str(int(meta_ped)),       prog_ped,   NAVY),
+            ("clientes_vip",   "VIP alvo",      str(int(meta_vip)),       prog_vip,   GOLD),
+            ("ticket_medio",   "Ticket medio",  f"R${meta_ticket:.0f}",   prog_ticket,"#0ea5e9"),
+        ]
+        for chave, lbl, val_str, prog, cor in _meta_cfg:
+            st.markdown(f"""
+  <div style="padding:10px 0;border-bottom:1px solid #F0F2F5">
+    <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+      <span style="font-size:12px;font-weight:600;color:{NAVY}">{lbl}</span>
+      <span style="font-size:12px;font-weight:700;color:{cor}">{val_str}</span>
+    </div>
+    <div class="pbar-bg">
+      <div class="pbar-fill" style="width:{prog:.0f}%;background:{cor}"></div>
+    </div>
+    <div style="font-size:10px;color:#9CA3AF;margin-top:3px">{prog:.0f}% da meta</div>
+  </div>
+""", unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+        with st.expander("Editar metas", expanded=False):
+            new_fat    = st.number_input("Meta faturamento mensal (R$)",
+                                         value=float(meta_fat), step=1000.0,
+                                         key="meta_fat_inp")
+            new_ped    = st.number_input("Meta pedidos por mes",
+                                         value=float(meta_ped), step=5.0,
+                                         key="meta_ped_inp")
+            new_vip    = st.number_input("Meta clientes VIP",
+                                         value=float(meta_vip), step=1.0,
+                                         key="meta_vip_inp")
+            new_ticket = st.number_input("Meta ticket medio (R$)",
+                                         value=float(meta_ticket), step=10.0,
+                                         key="meta_ticket_inp")
+            if st.button("Salvar metas", type="primary", key="salvar_metas"):
+                for k, v in [("fat_mensal", new_fat), ("pedidos_mensal", new_ped),
+                              ("clientes_vip", new_vip), ("ticket_medio", new_ticket)]:
+                    conn_meta.execute(
+                        "UPDATE metas SET valor=? WHERE chave=?", (v, k))
+                conn_meta.commit()
+                st.success("Metas salvas!")
+                st.rerun()
+        conn_meta.close()
+
+    # ── LINHA 4: tamanhos + scatter receita x pedidos ─────────────────────────
+    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+    c1, c2 = st.columns([5, 5], gap="large")
+
+    with c1:
         sizes_all = {}
         for p in ns_products:
             for s, q in (p.get("sizes") or {}).items():
                 sizes_all[s] = sizes_all.get(s, 0) + q
-        colors_all = {}
-        for p in ns_products:
-            for cor, q in (p.get("colors") or {}).items():
-                colors_all[cor] = colors_all.get(cor, 0) + q
-
-        st.markdown(f"""<div class="bb-card">
-  <div style="font-size:15px;font-weight:700;color:{NAVY};margin-bottom:8px">📐 Tamanhos & Cores</div>
+        st.markdown(f"""
+<div class="wcard" style="padding-bottom:10px">
+  <div class="wcard-title" style="margin-bottom:2px">Tamanhos mais vendidos</div>
+  <div class="wcard-sub">Unidades por tamanho</div>
 """, unsafe_allow_html=True)
         if sizes_all:
             df_sz = pd.DataFrame(
-                sorted(sizes_all.items(), key=lambda x: -x[1])[:6],
+                sorted(sizes_all.items(), key=lambda x: -x[1])[:8],
                 columns=["Tamanho", "Unidades"]
             )
             fig_sz = go.Figure(go.Bar(
-                x=df_sz["Tamanho"],
-                y=df_sz["Unidades"],
-                marker_color=NAVY,
-                marker_opacity=0.8,
-                text=df_sz["Unidades"],
-                textposition="outside",
-                textfont_size=10,
+                x=df_sz["Tamanho"], y=df_sz["Unidades"],
+                marker=dict(
+                    color=df_sz["Unidades"],
+                    colorscale=[[0, "#E5E7EB"], [1, PINK]],
+                    showscale=False,
+                ),
+                text=df_sz["Unidades"], textposition="outside",
+                textfont=dict(size=11, family="DM Sans"),
             ))
             fig_sz.update_layout(
-                height=155,
-                margin=dict(t=8, b=8, l=0, r=0),
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-                xaxis=dict(showgrid=False, tickfont=dict(size=11)),
+                height=200,
+                margin=dict(t=12, b=8, l=0, r=0),
+                plot_bgcolor="white", paper_bgcolor="white",
+                xaxis=dict(showgrid=False,
+                           tickfont=dict(size=11, family="DM Sans")),
                 yaxis=dict(visible=False),
                 showlegend=False,
+                font=dict(family="DM Sans"),
             )
-            st.plotly_chart(fig_sz, width="stretch")
+            st.plotly_chart(fig_sz, use_container_width=True)
+        else:
+            st.markdown('<div style="padding:30px 0;text-align:center;'
+                        'color:#9CA3AF">Sem dados de tamanho.</div>',
+                        unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        if colors_all:
-            st.markdown(f'<div style="font-size:12px;font-weight:600;color:{NAVY};margin:6px 0 6px">Cores mais vendidas</div>', unsafe_allow_html=True)
-            for cor, qtd in sorted(colors_all.items(), key=lambda x: -x[1])[:4]:
-                st.markdown(f"""
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #F7F5F3;font-size:12px">
-    <span style="color:{NAVY};font-weight:500">{cor}</span>
-    <span class="bb-badge badge-gray">{qtd} un</span>
-  </div>
+    with c2:
+        st.markdown(f"""
+<div class="wcard" style="padding-bottom:10px">
+  <div class="wcard-title" style="margin-bottom:2px">Receita vs Pedidos por mes</div>
+  <div class="wcard-sub">Correlacao receita-volume</div>
 """, unsafe_allow_html=True)
+        if ns_monthly:
+            df_sc = pd.DataFrame([
+                {"Mes": m[5:] + "/" + m[2:4],
+                 "Receita": d["revenue"],
+                 "Pedidos": d.get("orders", 0)}
+                for m, d in sorted(ns_monthly.items())
+            ])
+            fig_sc = go.Figure()
+            fig_sc.add_trace(go.Bar(
+                x=df_sc["Mes"], y=df_sc["Pedidos"],
+                name="Pedidos", yaxis="y2",
+                marker_color=NAVY, opacity=0.25,
+                hovertemplate="%{y} pedidos<extra></extra>",
+            ))
+            fig_sc.add_trace(go.Scatter(
+                x=df_sc["Mes"], y=df_sc["Receita"],
+                name="Receita", mode="lines+markers",
+                line=dict(color=PINK, width=2.5),
+                marker=dict(color="white", size=7,
+                            line=dict(color=PINK, width=2)),
+                hovertemplate="R$%{y:,.0f}<extra></extra>",
+            ))
+            fig_sc.update_layout(
+                height=200,
+                margin=dict(t=12, b=8, l=4, r=4),
+                plot_bgcolor="white", paper_bgcolor="white",
+                xaxis=dict(showgrid=False,
+                           tickfont=dict(size=10, family="DM Sans"),
+                           tickangle=-30),
+                yaxis=dict(showgrid=True, gridcolor="#F0F2F5",
+                           tickprefix="R$",
+                           tickfont=dict(size=10, family="DM Sans")),
+                yaxis2=dict(overlaying="y", side="right",
+                            showgrid=False, visible=False),
+                showlegend=False,
+                font=dict(family="DM Sans"),
+            )
+            st.plotly_chart(fig_sc, use_container_width=True)
+        else:
+            st.markdown('<div style="padding:30px 0;text-align:center;'
+                        'color:#9CA3AF">Sem dados.</div>',
+                        unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA 2 — CRM
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "👥 CRM — Clientes":
+elif pagina == "◎ CRM — Clientes":
     st.title("👥 CRM — Clientes Backbe")
 
     vip    = [c for c in ns_customers if c["segmento"] == "VIP"]
@@ -747,7 +1029,7 @@ elif pagina == "👥 CRM — Clientes":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA 3 — TECIDOS
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "🧵 Tecidos":
+elif pagina == "≋ Tecidos":
     st.title("🧵 Gestão de Tecidos")
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📋 Estoque", "➕ Cadastrar Tecido", "✏️ Editar Tecidos", "🛒 Onde Comprar", "⚖️ Tabela kg → metro"])
@@ -1008,7 +1290,7 @@ elif pagina == "🧵 Tecidos":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA 4 — ORDENS DE PRODUÇÃO
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "🏭 Ordens de Produção":
+elif pagina == "⊞ Ordens de Producao":
     st.title("🏭 Ordens de Produção")
 
     conn = get_conn()
@@ -1247,7 +1529,7 @@ elif pagina == "🏭 Ordens de Produção":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA 5 — CALCULADORA CMV
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "💰 Calculadora CMV":
+elif pagina == "◇ Calculadora CMV":
     st.title("💰 Calculadora de CMV — Custo por Peça")
 
     conn = get_conn()
@@ -1359,7 +1641,7 @@ elif pagina == "💰 Calculadora CMV":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA — FINANCEIRO (DRE Mensal)
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "💳 Financeiro":
+elif pagina == "▣ Financeiro":
     conn = get_conn()
     MESES_NOME = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]
@@ -1739,7 +2021,7 @@ elif pagina == "💳 Financeiro":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA 6 — CRESCIMENTO
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "📈 Crescimento":
+elif pagina == "↗ Crescimento":
     st.title("📈 Probabilidade de Crescimento")
 
     if not ns_monthly:
@@ -1839,7 +2121,7 @@ elif pagina == "📈 Crescimento":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA 7 — DECLARAÇÃO MEI
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "📄 Declaração MEI":
+elif pagina == "⊛ Declaracao MEI":
     st.title("📄 Declaração Anual MEI — DASN-SIMEI")
     st.caption("Envie o extrato Nubank em PDF para calcular a receita bruta de cada MEI")
 
@@ -2151,7 +2433,7 @@ elif pagina == "📄 Declaração MEI":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA — PRODUTOS
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "🧶 Produtos":
+elif pagina == "▦ Produtos":
     import io as _io
     import requests as _req
     import urllib3 as _u3
@@ -2499,7 +2781,7 @@ elif pagina == "🧶 Produtos":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA — ACABAMENTOS
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "🔩 Aviamentos":
+elif pagina == "⊕ Aviamentos":
     st.title("🔩 Aviamentos")
     st.caption("Cadastre botões, zíperes, elásticos e outros aviamentos. Eles ficam salvos para usar na Calculadora CMV.")
 
@@ -2620,7 +2902,7 @@ elif pagina == "🔩 Aviamentos":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA — RELATÓRIO MÃE
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "👩 Relatório Mãe":
+elif pagina == "◉ Relatorio Mae":
     st.title("👩 Relatório Mensal — Mãe Costureira")
 
     conn = get_conn()
@@ -2857,7 +3139,7 @@ elif pagina == "👩 Relatório Mãe":
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA — CALENDÁRIO (datas comerciais/moda + ordens de produção)
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "📅 Calendário":
+elif pagina == "▷ Calendario":
 
     # ── Datas especiais (comercial, moda, fiscal, feriado) ────────────────────
     DATAS_ESPECIAIS = [
