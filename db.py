@@ -294,6 +294,54 @@ def init_db():
     # Garante unicidade do nome (funciona em tabelas já existentes)
     c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_tecidos_nome ON tecidos(nome)")
 
+    # Aviamentos Backbe — seed persistente (nome, categoria, unidade, preco)
+    AVIAMENTOS_SEED = [
+        # ── Por unidade ──────────────────────────────────────────────────────
+        ("Zíper",                  "zíper",     "unidade", 0.80),
+        ("Botão",                  "botão",     "unidade", 0.40),
+        ("Botão pequeno",          "botão",     "unidade", 0.20),
+        ("Ponteira",               "outro",     "unidade", 0.25),
+        ("Ponteira Dourada Plástico", "outro",  "unidade", 0.01),
+        ("Gancho",                 "outro",     "unidade", 0.06),
+        ("Regulador",              "regulagem", "unidade", 0.60),
+        ("Regulador 3cm",          "regulagem", "unidade", 1.20),
+        ("Pressão",                "outro",     "unidade", 0.06),
+        ("Terminal",               "outro",     "unidade", 0.10),
+        ("Fecho",                  "outro",     "unidade", 0.60),
+        ("Argola",                 "outro",     "unidade", 0.30),
+        ("Argola 25mm",            "outro",     "unidade", 1.38),
+        ("Argola 35mm",            "outro",     "unidade", 0.68),
+        ("Etiqueta Comprida",      "etiqueta",  "unidade", 0.09),
+        ("Etiqueta Quadrada",      "etiqueta",  "unidade", 0.06),
+        ("Etiqueta com dobra",     "etiqueta",  "unidade", 0.08),
+        ("Etiqueta de composição", "etiqueta",  "unidade", 0.08),
+        ("Passante 29mm metal",    "outro",     "unidade", 1.56),
+        ("Passante 30mm níquel",   "outro",     "unidade", 0.30),
+        ("Pinteira quadrada níquel","outro",    "unidade", 0.70),
+        ("Ilhos n2",               "ilhós",     "unidade", 0.66),
+        ("Bolota grande",          "outro",     "unidade", 0.16),
+        ("Bolinha pequena",        "outro",     "unidade", 0.10),
+        ("Estrelinha",             "outro",     "unidade", 0.40),
+        ("Bolinha de madeira",     "outro",     "unidade", 0.39),
+        # ── Por metro ────────────────────────────────────────────────────────
+        ("Strass Corrente",        "outro",     "metro",   3.60),
+        ("Strass Colante",         "outro",     "metro",   4.80),
+        ("Elástico 1cm",           "elástico",  "metro",   0.64),
+        ("Elástico 2,5cm",         "elástico",  "metro",   0.00),
+        ("Corrente",               "outro",     "metro",   2.00),
+        ("Entretela",              "forro",     "metro",  17.63),
+        ("Barbatana",              "outro",     "metro",   3.50),
+        ("Bojo",                   "outro",     "metro",   2.00),
+        ("Fitas de pluma",         "outro",     "metro",   2.00),
+    ]
+    for (nome, cat, unid, preco) in AVIAMENTOS_SEED:
+        exists = c.execute("SELECT id FROM acabamentos WHERE nome=?", (nome,)).fetchone()
+        if not exists:
+            c.execute(
+                "INSERT INTO acabamentos (nome, categoria, unidade, preco) VALUES (?,?,?,?)",
+                (nome, cat, unid, preco)
+            )
+
     conn.commit()
     conn.close()
 
