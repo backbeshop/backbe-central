@@ -1848,52 +1848,110 @@ elif pagina == "🧶 Produtos":
 
     with tab_novo:
         st.subheader("➕ Novo Produto")
-        with st.form("form_novo_produto"):
-            c1, c2 = st.columns(2)
-            nome_np = c1.text_input("Nome do produto*")
-            colecao_np = c2.text_input("Coleção")
 
-            c3, c4 = st.columns(2)
-            custo_tec_np  = c3.number_input("Custo Tecido R$/peça", min_value=0.0, step=0.5)
-            custo_cor_np  = c4.number_input("Corte R$/peça", min_value=0.0, step=0.5, value=8.0)
+        # ── Nome e coleção ──────────────────────────────────────────────────
+        c1, c2 = st.columns(2)
+        nome_np     = c1.text_input("Nome do produto*", key="np_nome")
+        colecao_np  = c2.text_input("Coleção", key="np_colecao")
 
-            c5, c6 = st.columns(2)
-            custo_cos_np  = c5.number_input("Costura R$/peça", min_value=0.0, step=0.5)
-            custo_eti_np  = c6.number_input("Etiquetas R$/peça", min_value=0.0, step=0.1, value=0.2)
+        # ── Tecido ─────────────────────────────────────────────────────────
+        st.markdown("**🧵 Tecido**")
+        tecidos_ativos_np = rows_to_list(conn.execute(
+            "SELECT id, nome, unidade, preco_metro, preco_kg, peso_gsm, largura_m "
+            "FROM tecidos WHERE ativo=1 ORDER BY nome"
+        ).fetchall())
 
-            c7, c8 = st.columns(2)
-            custo_adic_np = c7.number_input("Acabamentos/Adicional R$/peça", min_value=0.0, step=0.5)
-            custo_emb_np  = c8.number_input("Embalagem R$/peça", min_value=0.0, step=0.5, value=10.0)
+        MANUAL = "— Digitar custo manualmente —"
+        opcoes_np = [MANUAL] + [t["nome"] for t in tecidos_ativos_np]
 
-            c9, c10 = st.columns(2)
-            mod_total_np  = c9.number_input("Modelagem total R$", min_value=0.0, step=50.0,
-                help="Valor total pago pela modelagem — será dividido pelo lote mínimo")
-            lote_np       = c10.number_input("Lote mínimo (peças)", min_value=1, value=10, step=1)
-            custo_mod_np  = round(mod_total_np / lote_np, 2) if lote_np else 0
+        ct1, ct2 = st.columns([3, 2])
+        tec_np_nome = ct1.selectbox("Selecionar tecido", opcoes_np, key="np_tec_sel")
 
-            cmv_np = (custo_tec_np + custo_cor_np + custo_cos_np + custo_eti_np +
-                      custo_adic_np + custo_emb_np + custo_mod_np)
-            st.info(
-                f"CMV estimado: **R${cmv_np:.2f}** | "
-                f"Mínimo (2x): R${cmv_np*2:.2f} | "
-                f"Ideal (3,5x): R${cmv_np*3.5:.2f}"
+        custo_tec_np   = 0.0
+        metragem_cm_np = 0
+
+        if tec_np_nome == MANUAL:
+            custo_tec_np = ct2.number_input(
+                "Custo tecido R$/peça", min_value=0.0, step=0.5, key="np_custo_tec_manual"
             )
-            preco_vnd_np = st.number_input("Preço de Venda R$", min_value=0.0, step=5.0)
-            obs_np = st.text_area("Observações")
+            if not tecidos_ativos_np:
+                st.caption("ℹ️ Nenhum tecido cadastrado. Vá em **🧵 Tecidos** no menu lateral para adicionar.")
+            else:
+                st.caption("Tecido não listado? Vá em **🧵 Tecidos** no menu lateral para cadastrar.")
+        else:
+            tec_np = next(t for t in tecidos_ativos_np if t["nome"] == tec_np_nome)
+            metragem_cm_np = ct2.number_input(
+                "Metragem usada (cm)", min_value=0, step=5, value=100, key="np_metragem_cm"
+            )
+            # Calcula custo do tecido por peça
+            unid = tec_np.get("unidade", "metro")
+            preco_metro = float(tec_np.get("preco_metro") or 0)
+            preco_kg    = float(tec_np.get("preco_kg") or 0)
+            largura_m   = float(tec_np.get("largura_m") or 1.5)
+            gsm         = float(tec_np.get("peso_gsm") or 200)
+            metros_np   = metragem_cm_np / 100
 
-            if st.form_submit_button("✅ Cadastrar", type="primary") and nome_np:
-                conn.execute("""
-                    INSERT INTO produtos_backbe
-                    (nome, colecao, custo_tecido, custo_corte, custo_costura,
-                     custo_etiquetas, custo_adicional, custo_embalagem, custo_modelagem,
-                     lote_minimo, custo_total, preco_venda, observacoes)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-                """, (nome_np, colecao_np, custo_tec_np, custo_cor_np, custo_cos_np,
-                      custo_eti_np, custo_adic_np, custo_emb_np, custo_mod_np,
-                      lote_np, cmv_np, preco_vnd_np, obs_np))
-                conn.commit()
-                st.success(f"✅ Produto **{nome_np}** cadastrado!")
-                st.rerun()
+            if unid == "metro" and preco_metro > 0:
+                custo_tec_np = round(metros_np * preco_metro, 2)
+                st.caption(
+                    f"📐 {metragem_cm_np} cm × R${preco_metro:.2f}/m = **R${custo_tec_np:.2f}/peça**"
+                )
+            elif unid == "kg" and preco_kg > 0:
+                peso_peca = metros_np * largura_m * gsm / 1000
+                custo_tec_np = round(peso_peca * preco_kg, 2)
+                st.caption(
+                    f"📐 {metragem_cm_np} cm × {largura_m}m larg. × {gsm}gsm → "
+                    f"{peso_peca:.3f} kg × R${preco_kg:.2f}/kg = **R${custo_tec_np:.2f}/peça**"
+                )
+            else:
+                st.caption("⚠️ Tecido sem preço cadastrado. Vá em **🧵 Tecidos** para adicionar o preço.")
+
+        # ── Outros custos ──────────────────────────────────────────────────
+        c3, c4 = st.columns(2)
+        custo_cor_np  = c3.number_input("Corte R$/peça",     min_value=0.0, step=0.5, value=8.0,  key="np_corte")
+        custo_cos_np  = c4.number_input("Costura R$/peça",   min_value=0.0, step=0.5,              key="np_costura")
+
+        c5, c6 = st.columns(2)
+        custo_eti_np  = c5.number_input("Etiquetas R$/peça", min_value=0.0, step=0.1, value=0.2,  key="np_etiq")
+        custo_emb_np  = c6.number_input("Embalagem R$/peça", min_value=0.0, step=0.5, value=10.0, key="np_emb")
+
+        c7, c8 = st.columns(2)
+        custo_adic_np = c7.number_input("Acabamentos/Adicional R$/peça", min_value=0.0, step=0.5, key="np_adic")
+        mod_total_np  = c8.number_input(
+            "Modelagem total R$", min_value=0.0, step=50.0, key="np_mod",
+            help="Valor total pago pela modelagem — será dividido pelo lote mínimo"
+        )
+
+        c9, _ = st.columns(2)
+        lote_np      = c9.number_input("Lote mínimo (peças)", min_value=1, value=10, step=1, key="np_lote")
+        custo_mod_np = round(mod_total_np / lote_np, 2) if lote_np else 0
+
+        # ── CMV preview ────────────────────────────────────────────────────
+        cmv_np = (custo_tec_np + custo_cor_np + custo_cos_np + custo_eti_np +
+                  custo_adic_np + custo_emb_np + custo_mod_np)
+        st.info(
+            f"CMV estimado: **R${cmv_np:.2f}** | "
+            f"Mínimo (2x): R${cmv_np*2:.2f} | "
+            f"Ideal (3,5x): R${cmv_np*3.5:.2f}"
+        )
+
+        preco_vnd_np = st.number_input("Preço de Venda R$", min_value=0.0, step=5.0, key="np_venda")
+        obs_np       = st.text_area("Observações", key="np_obs")
+
+        if st.button("✅ Cadastrar produto", type="primary", key="np_submit") and nome_np:
+            conn.execute("""
+                INSERT INTO produtos_backbe
+                (nome, colecao, metragem_cm, custo_tecido, custo_corte, custo_costura,
+                 custo_etiquetas, custo_adicional, custo_embalagem, custo_modelagem,
+                 lote_minimo, custo_total, preco_venda, observacoes)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (nome_np, colecao_np, metragem_cm_np,
+                  custo_tec_np, custo_cor_np, custo_cos_np,
+                  custo_eti_np, custo_adic_np, custo_emb_np, custo_mod_np,
+                  lote_np, cmv_np, preco_vnd_np, obs_np))
+            conn.commit()
+            st.success(f"✅ Produto **{nome_np}** cadastrado! CMV: R${cmv_np:.2f}")
+            st.rerun()
 
     conn.close()
 
