@@ -1,79 +1,209 @@
 """
-Parser de extratos Nubank (conta corrente PJ/PF) para calcular receita bruta MEI.
-Suporta extratos mensais e anuais em PDF.
+Parser de extratos bancários para calcular receita bruta MEI.
+Suporta:
+  - Nubank conta corrente PJ/PF (extrato anual/mensal)
+  - InfinitePay / CloudWalk (relatório de movimentações)
 """
 import re
-import pdfplumber
+import unicodedata
 from datetime import datetime
 from io import BytesIO
+import pdfplumber
 
 
-# Regex para valor monetário brasileiro: 1.500,00 ou -1.500,00 ou +1.500,00
-_RE_VALOR = re.compile(r"([+-]?\s*[\d]{1,3}(?:\.\d{3})*,\d{2})")
+# ── Meses em português ────────────────────────────────────────────────────────
+MESES_PT = {
+    "jan": "01", "fev": "02", "mar": "03", "abr": "04",
+    "mai": "05", "jun": "06", "jul": "07", "ago": "08",
+    "set": "09", "out": "10", "nov": "11", "dez": "12",
+}
 
-# Regex para data: DD/MM/YYYY ou DD/MM/YY
-_RE_DATA = re.compile(r"\b(\d{2}/\d{2}/(?:\d{4}|\d{2}))\b")
+# ── Regex ─────────────────────────────────────────────────────────────────────
+# Cabeçalho de dia Nubank: "05 MAI 2025" ou "05 MAI 2025 Total de entradas..."
+_RE_DIA_NUBANK = re.compile(
+    r"^(\d{2})\s+(JAN|FEV|MAR|ABR|MAI|JUN|JUL|AGO|SET|OUT|NOV|DEZ)\s+(\d{4})",
+    re.IGNORECASE,
+)
+# Transação InfinitePay com data: "03 Jun, 2025 00:38 Depósito de vendas ... +172,21"
+_RE_TX_INF = re.compile(
+    r"^(\d{2})\s+(JAN|FEV|MAR|ABR|MAI|JUN|JUL|AGO|SET|OUT|NOV|DEZ),?\s+(\d{4})\s+(\d{2}:\d{2})\s+(.+)",
+    re.IGNORECASE,
+)
+# Linha só com hora InfinitePay (transação extra no mesmo dia): "00:59 Depósito... +126,78"
+_RE_HORA_INF = re.compile(r"^(\d{2}:\d{2})\s+(.+)")
 
-# Palavras que indicam entrada (receita)
-_PALAVRAS_ENTRADA = [
-    "transferência recebida", "pix recebido", "pix enviado para você",
-    "depósito", "recebimento", "credito", "crédito", "pagamento recebido",
-    "ted recebida", "doc recebido", "recebido", "entrada",
-    "nuvemshop", "nuvem shop", "bagy", "mercado pago", "picpay",
-    "shopee", "ame digital", "ifood", "stone", "cielo", "pagseguro",
-    "getnet", "rede ", "adyen", "stripe",
-]
+# Valor monetário BR no final da linha: "1.500,00" ou "+172,21" ou "-840,81"
+_RE_VALOR_FIM = re.compile(r"\s([+-]?\d{1,3}(?:\.\d{3})*,\d{2})\s*$")
 
-# Palavras que indicam saída (despesa)
-_PALAVRAS_SAIDA = [
-    "pagamento efetuado", "pix enviado", "transferência enviada",
-    "ted enviada", "doc enviado", "débito", "debito", "saque",
-    "tarifa", "iof", "das ", "imposto", "fatura", "boleto pago",
-]
+# Remove valor do final para obter só a descrição
+_RE_REMOVE_VALOR = re.compile(r"\s+[+-]?\d{1,3}(?:\.\d{3})*,\d{2}\s*$")
 
 
-def _parse_valor(texto: str) -> float | None:
-    """Converte string monetária brasileira em float."""
-    m = _RE_VALOR.search(texto)
-    if not m:
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def _ptdate(day: str, mon: str, year: str) -> str:
+    m = MESES_PT.get(mon.lower(), "00")
+    return f"{day.zfill(2)}/{m}/{year}"
+
+
+def _sem_acento(s: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFD", s)
+        if unicodedata.category(c) != "Mn"
+    )
+
+
+def _parse_valor(linha: str) -> float | None:
+    mv = _RE_VALOR_FIM.search(linha)
+    if not mv:
         return None
-    s = m.group(1).replace(" ", "").replace(".", "").replace(",", ".")
     try:
-        return float(s)
+        return float(mv.group(1).replace(".", "").replace(",", "."))
     except ValueError:
         return None
 
 
-def _parse_data(texto: str) -> str | None:
-    """Extrai primeira data DD/MM/YYYY do texto."""
-    m = _RE_DATA.search(texto)
-    if not m:
-        return None
-    d = m.group(1)
-    if len(d) == 8:  # DD/MM/YY
-        d = d[:6] + "20" + d[6:]
-    return d
-
-
-def _classificar(descricao: str, valor: float) -> str:
-    """Retorna 'entrada' ou 'saida' baseado na descrição e sinal do valor."""
-    desc = descricao.lower()
-    if valor > 0:
+def _classificar_nubank(desc: str) -> str:
+    """Classifica transação Nubank pela descrição (valores sempre positivos no extrato)."""
+    dl = _sem_acento(desc.lower())
+    # Entradas
+    if any(k in dl for k in ["recebida", "recebido", "entrada", "credito"]):
         return "entrada"
-    if valor < 0:
+    # Saídas — inclui pagamentos de fatura/boleto, transferências enviadas, débitos
+    if any(k in dl for k in [
+        "enviada", "enviado", "saida", "debito",
+        "pagamento de", "pagamento efetuado",
+        "imposto", "tarifa", "das ", "saque",
+    ]):
         return "saida"
-    # valor == 0 — tenta inferir pela descrição
-    for p in _PALAVRAS_ENTRADA:
-        if p in desc:
-            return "entrada"
-    for p in _PALAVRAS_SAIDA:
-        if p in desc:
-            return "saida"
+    # Default conservador: se não identificou, trata como entrada
+    # (o usuário pode desmarcar na tabela)
+    return "entrada"
+
+
+def _classificar_infinitepay(valor: float) -> str:
+    """InfinitePay usa sinal no valor (+/-)."""
     return "entrada" if valor >= 0 else "saida"
 
 
-def _extrair_linhas_pdf(pdf_bytes: bytes) -> list[str]:
-    """Extrai todas as linhas de texto do PDF."""
+# ── Parser Nubank ─────────────────────────────────────────────────────────────
+_SKIP_NUBANK_EXACT = {
+    "saldo do dia", "total de entradas", "total de saidas",
+    "tem alguma duvida", "caso a solucao", "extrato gerado",
+    "rendimento", "saldo inicial", "saldo final",
+    "movimentacoes", "0800", "nubank.com", "atendimento",
+}
+_SKIP_NUBANK_CONTAINS = [
+    "cnpj", "agencia 0001", "01 de janeiro", "31 de dezembro",
+]
+_SKIP_NUBANK_START = re.compile(
+    r"^(agencia|conta:|ip ltda|s\.a\.|banco|de \d{2})", re.I
+)
+
+
+def _parse_nubank(linhas: list[str]) -> list[dict]:
+    transacoes = []
+    data_atual = None
+
+    for linha in linhas:
+        l = linha.strip()
+        if not l:
+            continue
+
+        # Detecta cabeçalho de dia
+        m = _RE_DIA_NUBANK.match(l)
+        if m:
+            data_atual = _ptdate(m.group(1), m.group(2), m.group(3))
+            continue
+
+        if data_atual is None:
+            continue
+
+        ll_raw = l.lower()
+        ll = _sem_acento(ll_raw)
+
+        # Pula linhas irrelevantes
+        if any(ll.startswith(s) or ll == s for s in _SKIP_NUBANK_EXACT):
+            continue
+        if any(s in ll for s in _SKIP_NUBANK_CONTAINS):
+            continue
+        if _SKIP_NUBANK_START.match(ll):
+            continue
+
+        # Extrai valor do final da linha
+        valor = _parse_valor(l)
+        if valor is None:
+            continue
+
+        # Monta descrição
+        desc = _RE_REMOVE_VALOR.sub("", l).strip()
+        if len(desc) < 5:
+            continue
+
+        tipo = _classificar_nubank(desc)
+        transacoes.append({
+            "data": data_atual,
+            "descricao": desc[:120],
+            "valor": abs(valor),
+            "tipo": tipo,
+        })
+
+    return transacoes
+
+
+# ── Parser InfinitePay/CloudWalk ──────────────────────────────────────────────
+_SKIP_INF = ["central de ajuda", "pagina ", "pag. ", "a central"]
+
+
+def _parse_infinitepay(linhas: list[str]) -> list[dict]:
+    transacoes = []
+    data_atual = None
+
+    for linha in linhas:
+        l = linha.strip()
+        if not l:
+            continue
+
+        ll = l.lower()
+        if "saldo do dia" in ll or "data hora" in ll:
+            continue
+        if any(s in ll for s in _SKIP_INF):
+            continue
+
+        # Linha com data completa: "DD Mmm, YYYY HH:MM ..."
+        m = _RE_TX_INF.match(l)
+        if m:
+            data_atual = _ptdate(m.group(1), m.group(2), m.group(3))
+            valor = _parse_valor(l)
+            if valor is not None:
+                desc = _RE_REMOVE_VALOR.sub("", m.group(5)).strip()
+                transacoes.append({
+                    "data": data_atual,
+                    "descricao": desc[:120],
+                    "valor": abs(valor),
+                    "tipo": _classificar_infinitepay(valor),
+                })
+            continue
+
+        # Linha com só hora (transação extra no mesmo dia): "HH:MM ..."
+        if data_atual:
+            mh = _RE_HORA_INF.match(l)
+            if mh:
+                valor = _parse_valor(l)
+                if valor is not None:
+                    desc = _RE_REMOVE_VALOR.sub("", mh.group(2)).strip()
+                    if "saldo do dia" not in desc.lower():
+                        transacoes.append({
+                            "data": data_atual,
+                            "descricao": desc[:120],
+                            "valor": abs(valor),
+                            "tipo": _classificar_infinitepay(valor),
+                        })
+
+    return transacoes
+
+
+# ── Extração de texto do PDF ──────────────────────────────────────────────────
+def _extrair_linhas(pdf_bytes: bytes) -> list[str]:
     linhas = []
     with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
         for page in pdf.pages:
@@ -83,106 +213,57 @@ def _extrair_linhas_pdf(pdf_bytes: bytes) -> list[str]:
     return linhas
 
 
-def _tentar_tabelas(pdf_bytes: bytes) -> list[dict]:
-    """Tenta extrair via tabela estruturada do pdfplumber."""
-    transacoes = []
-    with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
-        for page in pdf.pages:
-            tables = page.extract_tables()
-            for table in tables:
-                for row in table:
-                    if not row:
-                        continue
-                    row = [str(c).strip() if c else "" for c in row]
-                    texto = " ".join(row)
-                    data = _parse_data(texto)
-                    valor = _parse_valor(texto)
-                    if data and valor is not None:
-                        desc = " ".join(
-                            c for c in row
-                            if c and not _RE_DATA.search(c) and not _RE_VALOR.search(c)
-                        ).strip()
-                        transacoes.append({
-                            "data": data,
-                            "descricao": desc or texto[:80],
-                            "valor": valor,
-                            "tipo": _classificar(desc, valor),
-                        })
-    return transacoes
-
-
-def _tentar_texto(linhas: list[str]) -> list[dict]:
-    """Faz parse linha por linha quando não há tabelas estruturadas."""
-    transacoes = []
-    i = 0
-    while i < len(linhas):
-        linha = linhas[i].strip()
-        if not linha:
-            i += 1
-            continue
-
-        data = _parse_data(linha)
-        valor = _parse_valor(linha)
-
-        if data and valor is not None:
-            # Tudo nesta linha
-            desc = re.sub(r"\d{2}/\d{2}/\d{2,4}", "", linha)
-            desc = re.sub(_RE_VALOR.pattern, "", desc).strip(" |-+R$")
-            transacoes.append({
-                "data": data,
-                "descricao": desc[:100],
-                "valor": valor,
-                "tipo": _classificar(desc, valor),
-            })
-        elif data and i + 1 < len(linhas):
-            # Data na linha atual, valor pode estar na próxima
-            prox = linhas[i + 1].strip()
-            valor2 = _parse_valor(prox)
-            if valor2 is not None:
-                desc = re.sub(r"\d{2}/\d{2}/\d{2,4}", "", linha).strip()
-                transacoes.append({
-                    "data": data,
-                    "descricao": desc[:100],
-                    "valor": valor2,
-                    "tipo": _classificar(desc, valor2),
-                })
-                i += 1
-        i += 1
-    return transacoes
-
-
+# ── Função pública ────────────────────────────────────────────────────────────
 def parse_nubank_pdf(pdf_bytes: bytes, nome_arquivo: str = "") -> dict:
     """
-    Faz parse de um extrato Nubank PDF.
-    Retorna dict com:
-      - transacoes: list de {data, descricao, valor, tipo}
-      - total_entradas: soma das entradas
-      - total_saidas: soma das saídas (positivo)
-      - ano_detectado: ano mais frequente nas transações
-      - erros: list de mensagens de problema
+    Faz parse de extrato Nubank (conta corrente PJ/PF) ou relatório InfinitePay.
+
+    Retorna:
+        transacoes     : list[{data, descricao, valor, tipo}]
+        entradas       : list de entradas
+        saidas         : list de saídas
+        total_entradas : soma das entradas
+        total_saidas   : soma das saídas
+        ano_detectado  : ano predominante nas transações
+        erros          : list de mensagens de erro
     """
-    erros = []
-    transacoes = []
+    erros: list[str] = []
+    transacoes: list[dict] = []
 
     try:
-        # Tenta tabelas primeiro (mais preciso)
-        transacoes = _tentar_tabelas(pdf_bytes)
+        linhas = _extrair_linhas(pdf_bytes)
+        texto_top = _sem_acento(" ".join(linhas[:30]).lower())
 
-        # Se não encontrou nada com tabela, tenta texto
+        if "infinitepay" in texto_top or (
+            "cloudwalk" in texto_top and "relatorio" in texto_top
+        ):
+            transacoes = _parse_infinitepay(linhas)
+        else:
+            transacoes = _parse_nubank(linhas)
+
+        # Fallback: tenta o outro formato se encontrou menos de 3 transações
         if len(transacoes) < 3:
-            linhas = _extrair_linhas_pdf(pdf_bytes)
-            transacoes = _tentar_texto(linhas)
+            alt = (
+                _parse_infinitepay(linhas)
+                if not transacoes
+                else _parse_nubank(linhas)
+            )
+            if len(alt) > len(transacoes):
+                transacoes = alt
 
     except Exception as e:
         erros.append(f"Erro ao processar PDF: {e}")
 
     if not transacoes:
-        erros.append("Nenhuma transação encontrada. Verifique se o PDF é um extrato Nubank válido.")
+        erros.append(
+            "Nenhuma transação encontrada. "
+            "Verifique se o PDF é um extrato Nubank ou InfinitePay válido."
+        )
 
     # Detecta ano predominante
-    anos = []
+    anos: list[int] = []
     for t in transacoes:
-        if t["data"]:
+        if t.get("data"):
             try:
                 anos.append(int(t["data"].split("/")[2]))
             except Exception:
@@ -196,8 +277,8 @@ def parse_nubank_pdf(pdf_bytes: bytes, nome_arquivo: str = "") -> dict:
         "transacoes": transacoes,
         "entradas": entradas,
         "saidas": saidas,
-        "total_entradas": sum(abs(t["valor"]) for t in entradas),
-        "total_saidas": sum(abs(t["valor"]) for t in saidas),
+        "total_entradas": sum(t["valor"] for t in entradas),
+        "total_saidas": sum(t["valor"] for t in saidas),
         "ano_detectado": ano_detectado,
         "erros": erros,
     }
