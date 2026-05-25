@@ -3,7 +3,9 @@ Parser de extratos bancários para calcular receita bruta MEI.
 Suporta:
   - Nubank conta corrente PJ/PF (extrato anual/mensal)
   - InfinitePay / CloudWalk (relatório de movimentações)
+v2.1 — 2026-05-25
 """
+PARSER_VERSION = "2.1"
 import re
 import unicodedata
 from datetime import datetime
@@ -229,16 +231,21 @@ def parse_nubank_pdf(pdf_bytes: bytes, nome_arquivo: str = "") -> dict:
     """
     erros: list[str] = []
     transacoes: list[dict] = []
+    debug_info: dict = {"version": PARSER_VERSION, "linhas_total": 0, "formato": "?", "primeiras_linhas": []}
 
     try:
         linhas = _extrair_linhas(pdf_bytes)
+        debug_info["linhas_total"] = len(linhas)
+        debug_info["primeiras_linhas"] = [l for l in linhas[:15] if l.strip()]
         texto_top = _sem_acento(" ".join(linhas[:30]).lower())
 
         if "infinitepay" in texto_top or (
             "cloudwalk" in texto_top and "relatorio" in texto_top
         ):
+            debug_info["formato"] = "infinitepay"
             transacoes = _parse_infinitepay(linhas)
         else:
+            debug_info["formato"] = "nubank"
             transacoes = _parse_nubank(linhas)
 
         # Fallback: tenta o outro formato se encontrou menos de 3 transações
@@ -250,6 +257,7 @@ def parse_nubank_pdf(pdf_bytes: bytes, nome_arquivo: str = "") -> dict:
             )
             if len(alt) > len(transacoes):
                 transacoes = alt
+                debug_info["formato"] += "+fallback"
 
     except Exception as e:
         erros.append(f"Erro ao processar PDF: {e}")
@@ -281,4 +289,5 @@ def parse_nubank_pdf(pdf_bytes: bytes, nome_arquivo: str = "") -> dict:
         "total_saidas": sum(t["valor"] for t in saidas),
         "ano_detectado": ano_detectado,
         "erros": erros,
+        "debug": debug_info,
     }

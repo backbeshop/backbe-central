@@ -1414,6 +1414,10 @@ elif pagina == "📄 Declaração MEI":
                     st.error("❌ Nenhuma transação encontrada nos PDFs. Confirme que são extratos Nubank válidos.")
                 for e in res.get("erros", []):
                     st.warning(e)
+                if res.get("debug_msgs"):
+                    with st.expander("🔍 Debug — clique para ver detalhes do parser"):
+                        for dm in res["debug_msgs"]:
+                            st.markdown(dm)
 
             # ── Upload de PDFs ──
             st.markdown("#### 📎 Enviar Extratos Nubank (PDF)")
@@ -1435,10 +1439,21 @@ elif pagina == "📄 Declaração MEI":
                     filtrados = 0
                     total_pdf = 0
                     erros_total = []
+                    debug_msgs = []
                     with st.spinner("Lendo PDFs..."):
                         for f in uploaded:
                             pdf_bytes = f.read()
                             resultado = parse_nubank_pdf(pdf_bytes, f.name)
+
+                            # Coleta debug info
+                            dbg = resultado.get("debug", {})
+                            debug_msgs.append(
+                                f"**{f.name}** — parser v{dbg.get('version','?')}, "
+                                f"{dbg.get('linhas_total',0)} linhas, "
+                                f"formato={dbg.get('formato','?')}, "
+                                f"{len(resultado['transacoes'])} transações\n"
+                                + "\n".join(f"  `{l}`" for l in dbg.get("primeiras_linhas", [])[:8])
+                            )
 
                             if resultado["erros"]:
                                 erros_total.extend([f"**{f.name}**: {e}" for e in resultado["erros"]])
@@ -1486,6 +1501,7 @@ elif pagina == "📄 Declaração MEI":
                         "total_pdf": total_pdf,
                         "arquivos": len(uploaded),
                         "erros": erros_total,
+                        "debug_msgs": debug_msgs,
                     }
                     st.rerun()
 
