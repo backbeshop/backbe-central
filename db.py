@@ -333,6 +333,12 @@ def init_db():
         ("Barbatana",              "outro",     "metro",   3.50),
         ("Bojo",                   "outro",     "metro",   2.00),
         ("Fitas de pluma",         "outro",     "metro",   2.00),
+        # ── Adicionados em 2026-05-25 ────────────────────────────────────────
+        ("Bola acrílica",          "outro",     "unidade", 1.30),
+        ("Ponteira de madeira",    "outro",     "unidade", 0.44),
+        ("Pecinha concha",         "outro",     "unidade", 1.60),
+        ("Pecinha dourada",        "outro",     "unidade", 1.60),
+        ("Pecinha sol",            "outro",     "unidade", 2.00),
     ]
     for (nome, cat, unid, preco) in AVIAMENTOS_SEED:
         exists = c.execute("SELECT id FROM acabamentos WHERE nome=?", (nome,)).fetchone()
