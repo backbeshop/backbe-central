@@ -1,7 +1,29 @@
-import sqlite3, json
+import sqlite3, json, os
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "data" / "backbe.db"
+
+def _resolve_db_path() -> Path:
+    """Resolve o caminho do banco SQLite.
+    - Usa DB_PATH env var se definida (útil nos secrets do Streamlit Cloud).
+    - Tenta criar o diretório local data/ (funciona em dev).
+    - Se o filesystem for read-only (Streamlit Cloud), cai para /tmp.
+    """
+    env_path = os.getenv("DB_PATH")
+    if env_path:
+        p = Path(env_path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        return p
+
+    local_dir = Path(__file__).parent / "data"
+    try:
+        local_dir.mkdir(parents=True, exist_ok=True)
+        return local_dir / "backbe.db"
+    except OSError:
+        # Streamlit Cloud: /mount/src/ é read-only → usa /tmp
+        return Path("/tmp") / "backbe.db"
+
+
+DB_PATH = _resolve_db_path()
 
 def get_conn():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
