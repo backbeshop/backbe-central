@@ -147,6 +147,19 @@ def init_db():
         arquivo TEXT
     )""")
 
+    # Fornecedores de tecidos ("Onde Comprar")
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS tecidos_fornecedores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tecido_id INTEGER REFERENCES tecidos(id) ON DELETE CASCADE,
+        fornecedor TEXT NOT NULL,
+        contato TEXT,
+        cidade TEXT,
+        site TEXT,
+        observacoes TEXT,
+        criado_em TEXT DEFAULT (datetime('now','localtime'))
+    )""")
+
     # Acabamentos / Peças
     c.execute("""
     CREATE TABLE IF NOT EXISTS acabamentos (

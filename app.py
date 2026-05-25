@@ -749,7 +749,7 @@ elif pagina == "👥 CRM — Clientes":
 elif pagina == "🧵 Tecidos":
     st.title("🧵 Gestão de Tecidos")
 
-    tab1, tab2, tab3, tab4 = st.tabs(["📋 Estoque", "➕ Cadastrar Tecido", "✏️ Editar Tecidos", "⚖️ Tabela kg → metro"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📋 Estoque", "➕ Cadastrar Tecido", "✏️ Editar Tecidos", "🛒 Onde Comprar", "⚖️ Tabela kg → metro"])
 
     conn = get_conn()
 
@@ -876,7 +876,92 @@ elif pagina == "🧵 Tecidos":
                 st.success("✅ Tecidos atualizados!")
                 st.rerun()
 
+            # ── Excluir tecido ─────────────────────────────────────────────
+            st.divider()
+            st.markdown("#### 🗑️ Excluir Tecido")
+            st.caption("A exclusão é permanente e remove o tecido de todas as referências.")
+            nomes_tec = [t["nome"] for t in tecidos_all]
+            tec_del = st.selectbox("Selecionar tecido para excluir", ["— escolha —"] + nomes_tec, key="tec_del_sel")
+            if tec_del != "— escolha —":
+                tec_del_obj = next(t for t in tecidos_all if t["nome"] == tec_del)
+                col_d1, col_d2 = st.columns([3, 1])
+                col_d1.warning(f"⚠️ Excluir **{tec_del}** permanentemente?")
+                if col_d2.button("🗑️ Confirmar exclusão", key="tec_del_btn", type="primary"):
+                    conn.execute("DELETE FROM tecidos WHERE id=?", (tec_del_obj["id"],))
+                    conn.commit()
+                    st.success(f"✅ Tecido **{tec_del}** excluído.")
+                    st.rerun()
+
     with tab4:
+        st.subheader("🛒 Onde Comprar — Fornecedores por Tecido")
+        tecidos_lista = rows_to_list(conn.execute("SELECT id, nome FROM tecidos WHERE ativo=1 ORDER BY nome").fetchall())
+
+        if not tecidos_lista:
+            st.info("Nenhum tecido cadastrado ainda. Cadastre tecidos primeiro.")
+        else:
+            # ── Formulário de novo fornecedor ──────────────────────────────
+            with st.expander("➕ Adicionar fornecedor", expanded=False):
+                f1, f2 = st.columns(2)
+                tec_forn_sel = f1.selectbox(
+                    "Tecido", [t["nome"] for t in tecidos_lista], key="forn_tec"
+                )
+                forn_nome = f2.text_input("Nome do fornecedor*", key="forn_nome")
+
+                f3, f4, f5 = st.columns(3)
+                forn_contato = f3.text_input("Contato (WhatsApp/tel)", key="forn_contato")
+                forn_cidade  = f4.text_input("Cidade", key="forn_cidade")
+                forn_site    = f5.text_input("Site / Instagram", key="forn_site")
+                forn_obs     = st.text_area("Observações (preço atual, prazo, mínimo...)", key="forn_obs")
+
+                if st.button("✅ Salvar fornecedor", type="primary", key="forn_save") and forn_nome:
+                    tec_id_forn = next(t["id"] for t in tecidos_lista if t["nome"] == tec_forn_sel)
+                    conn.execute("""
+                        INSERT INTO tecidos_fornecedores
+                        (tecido_id, fornecedor, contato, cidade, site, observacoes)
+                        VALUES (?,?,?,?,?,?)
+                    """, (tec_id_forn, forn_nome, forn_contato, forn_cidade, forn_site, forn_obs))
+                    conn.commit()
+                    st.success(f"✅ Fornecedor **{forn_nome}** adicionado!")
+                    st.rerun()
+
+            st.divider()
+
+            # ── Lista de fornecedores agrupados por tecido ─────────────────
+            fornecedores = rows_to_list(conn.execute("""
+                SELECT f.*, t.nome AS tecido_nome
+                FROM tecidos_fornecedores f
+                JOIN tecidos t ON t.id = f.tecido_id
+                ORDER BY t.nome, f.fornecedor
+            """).fetchall())
+
+            if not fornecedores:
+                st.info("Nenhum fornecedor cadastrado ainda. Use o formulário acima para adicionar.")
+            else:
+                # Agrupa por tecido
+                por_tecido = {}
+                for f in fornecedores:
+                    por_tecido.setdefault(f["tecido_nome"], []).append(f)
+
+                for tec_nome, flist in sorted(por_tecido.items()):
+                    st.markdown(f"##### 🧵 {tec_nome}")
+                    for forn in flist:
+                        with st.container():
+                            col_info, col_del = st.columns([10, 1])
+                            with col_info:
+                                partes = [f"**{forn['fornecedor']}**"]
+                                if forn.get("cidade"):      partes.append(f"📍 {forn['cidade']}")
+                                if forn.get("contato"):     partes.append(f"📞 {forn['contato']}")
+                                if forn.get("site"):        partes.append(f"🔗 {forn['site']}")
+                                st.markdown(" · ".join(partes))
+                                if forn.get("observacoes"):
+                                    st.caption(forn["observacoes"])
+                            if col_del.button("🗑️", key=f"del_forn_{forn['id']}", help="Excluir fornecedor"):
+                                conn.execute("DELETE FROM tecidos_fornecedores WHERE id=?", (forn["id"],))
+                                conn.commit()
+                                st.rerun()
+                    st.markdown("")
+
+    with tab5:
         st.subheader("⚖️ Conversão kg → metro (para malhas)")
         st.info("""
         **Fórmula:** Preço/metro = Preço/kg × (GSM × Largura) / 1000
