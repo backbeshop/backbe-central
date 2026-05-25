@@ -10,6 +10,8 @@ from pathlib import Path
 from db import init_db, get_conn, rows_to_list, row_to_dict
 from api_ns import fetch_all_orders, fetch_all_customers, compute_sales, compute_customers
 from nubank_parser import parse_nubank_pdf
+from notion_api import get_week_content, notion_ok, PLATAFORMA_ICON
+from ics_export import build_ics, gcal_link
 
 
 def _calc_preco_metro(t: dict) -> float:
@@ -461,10 +463,12 @@ if pagina == "◆ Dashboard":
     conn_d.close()
     total_em_prod = sum(o["cnt"] for o in ordens_raw)
 
-    meta_fat   = metas.get("fat_mensal", 15000)
-    meta_ped   = metas.get("pedidos_mensal", 60)
-    meta_vip   = metas.get("clientes_vip", 25)
-    meta_ticket= metas.get("ticket_medio", 220)
+    meta_fat      = metas.get("fat_mensal", 8000)
+    meta_fat_prox = metas.get("fat_mensal_prox", 15000)
+    meta_fat_anual= metas.get("fat_anual", 150000)
+    meta_ped      = metas.get("pedidos_mensal", 60)
+    meta_vip      = metas.get("clientes_vip", 25)
+    meta_ticket   = metas.get("ticket_medio", 220)
 
     # progresso mês atual
     ped_mes = ns_monthly.get(months_sorted[-1], {}).get("orders", 0) if months_sorted else 0
@@ -472,6 +476,42 @@ if pagina == "◆ Dashboard":
     prog_ped    = min(ped_mes  / meta_ped  * 100, 100) if meta_ped else 0
     prog_vip    = min(segs["VIP"] / meta_vip * 100, 100) if meta_vip else 0
     prog_ticket = min(ticket_medio / meta_ticket * 100, 100) if meta_ticket else 0
+    prog_anual  = min(fat_ano / meta_fat_anual * 100, 100) if meta_fat_anual else 0
+
+    # ── banner: meta mensal batida → upgrade automático ──────────────────────
+    if rev_atual > 0 and rev_atual >= meta_fat and meta_fat <= 8000:
+        if "meta_upgrade_feito" not in st.session_state:
+            st.session_state.meta_upgrade_feito = False
+        if not st.session_state.meta_upgrade_feito:
+            st.markdown(f"""
+<div style="background:linear-gradient(135deg,#ECFDF5,#D1FAE5);
+            border:1.5px solid #6EE7B7;border-radius:16px;
+            padding:18px 22px;margin-bottom:22px;
+            display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+  <div>
+    <div style="font-size:16px;font-weight:800;color:#065F46">
+      Meta de R$8.000 batida! 🎉
+    </div>
+    <div style="font-size:13px;color:#047857;margin-top:3px">
+      Faturamento atual: <strong>R${rev_atual:,.0f}</strong> —
+      defina a nova meta de <strong>R${meta_fat_prox:,.0f}</strong>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+            _col_yes, _col_no = st.columns([1, 4])
+            with _col_yes:
+                if st.button("Sim, atualizar para R$15k", type="primary",
+                             key="btn_upgrade_meta"):
+                    _conn_upg = get_conn()
+                    _conn_upg.execute(
+                        "UPDATE metas SET valor=? WHERE chave='fat_mensal'",
+                        (meta_fat_prox,))
+                    _conn_upg.commit()
+                    _conn_upg.close()
+                    st.session_state.meta_upgrade_feito = True
+                    st.success("Meta atualizada para R$15.000!")
+                    st.rerun()
 
     # ── header ───────────────────────────────────────────────────────────────
     MESES_PT_D = ["janeiro","fevereiro","marco","abril","maio","junho",
@@ -504,6 +544,8 @@ if pagina == "◆ Dashboard":
                 padding:8px 16px">
       <span style="font-size:12px;color:#374151;font-weight:600">
         Meta do mes: <strong style="color:{PINK}">R${meta_fat:,.0f}</strong>
+        &nbsp;·&nbsp; Anual: <strong style="color:{GOLD}">R${fat_ano/1000:.1f}k / R${meta_fat_anual/1000:.0f}k</strong>
+        &nbsp;<span style="color:#6B7280">({prog_anual:.0f}%)</span>
       </span>
     </div>
   </div>
@@ -3493,47 +3535,179 @@ elif pagina == "▷ Calendario":
 """, unsafe_allow_html=True)
 
     with ev_col:
-        upcoming = []
-        for d in DATAS_ESPECIAIS:
-            try:
-                d_obj = datetime.strptime(d["data"], "%Y-%m-%d").date()
-                if d_obj >= today_d:
-                    upcoming.append({**d, "days_until": (d_obj - today_d).days, "d_obj": d_obj})
-            except Exception:
-                pass
-        upcoming = sorted(upcoming, key=lambda x: x["days_until"])[:12]
+        # ── Notion: busca conteúdo da semana ─────────────────────────────────
+        @st.cache_data(ttl=1800, show_spinner=False)
+        def _load_notion_week():
+            return get_week_content()
 
-        st.markdown(f"""
-<div class="bb-card" style="max-height:520px;overflow-y:auto">
-  <div style="font-size:15px;font-weight:700;color:{NAVY};margin-bottom:14px">📅 Próximas datas</div>
-""", unsafe_allow_html=True)
-        for ev in upcoming:
-            tc = TIPO_COLORS[ev["tipo"]]
-            du = ev["days_until"]
-            dias_label = "🔴 hoje!" if du == 0 else (f"⚠️ {du}d" if du <= 7 else f"{du}d")
-            bold = "font-weight:700" if du <= 14 else ""
+        notion_posts = []
+        notion_error = None
+        if notion_ok():
+            try:
+                notion_posts = _load_notion_week()
+                if notion_posts and notion_posts[0].get("_error"):
+                    notion_error = notion_posts[0]["_error"]
+                    notion_posts = []
+            except Exception as e:
+                notion_error = str(e)
+
+        tab_datas, tab_conteudo = st.tabs(["📅 Próximas Datas", "📝 Conteúdo da Semana"])
+
+        with tab_datas:
+            upcoming = []
+            for d in DATAS_ESPECIAIS:
+                try:
+                    d_obj = datetime.strptime(d["data"], "%Y-%m-%d").date()
+                    if d_obj >= today_d:
+                        upcoming.append({**d, "days_until": (d_obj - today_d).days, "d_obj": d_obj})
+                except Exception:
+                    pass
+            upcoming = sorted(upcoming, key=lambda x: x["days_until"])[:12]
+
             st.markdown(f"""
+<div class="wcard" style="max-height:440px;overflow-y:auto;padding:16px 18px">
+  <div style="font-size:14px;font-weight:700;color:{NAVY};margin-bottom:12px">Datas importantes</div>
+""", unsafe_allow_html=True)
+            for ev in upcoming:
+                tc = TIPO_COLORS[ev["tipo"]]
+                du = ev["days_until"]
+                dias_label = "hoje!" if du == 0 else (f"⚠ {du}d" if du <= 7 else f"{du}d")
+                bold = "font-weight:700" if du <= 14 else ""
+                gcal = gcal_link(ev["nome"], ev["data"])
+                gcal_btn = (
+                    f'<a href="{gcal}" target="_blank" '
+                    f'style="font-size:9px;color:#9CA3AF;text-decoration:none;'
+                    f'border:1px solid #E5E7EB;border-radius:4px;padding:1px 5px">+GCal</a>'
+                ) if gcal else ""
+                st.markdown(f"""
   <div style="display:flex;justify-content:space-between;align-items:center;
-              padding:8px 0;border-bottom:1px solid #F7F5F3">
-    <div>
-      <div style="font-size:12px;font-weight:600;color:{NAVY};{bold}">{ev['nome']}</div>
-      <div style="font-size:10px;color:#9CA3AF;margin-top:1px">{ev['d_obj'].strftime('%d/%m/%Y')}</div>
+              padding:7px 0;border-bottom:1px solid #F0F2F5">
+    <div style="flex:1">
+      <div style="font-size:11.5px;font-weight:600;color:{NAVY};{bold}">{ev['nome']}</div>
+      <div style="font-size:10px;color:#9CA3AF;margin-top:1px;display:flex;align-items:center;gap:6px">
+        {ev['d_obj'].strftime('%d/%m/%Y')} {gcal_btn}
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <span style="background:{tc['bg']};color:{tc['dot']};padding:2px 7px;border-radius:99px;font-size:9px;font-weight:700;text-transform:uppercase">{ev['tipo']}</span>
-      <span style="font-size:12px;font-weight:700;color:{NAVY};min-width:38px;text-align:right">{dias_label}</span>
+    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+      <span style="background:{tc['bg']};color:{tc['dot']};padding:1px 6px;border-radius:99px;font-size:9px;font-weight:700">{ev['tipo']}</span>
+      <span style="font-size:11px;font-weight:700;color:{NAVY};min-width:36px;text-align:right">{dias_label}</span>
     </div>
   </div>
 """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-        with st.expander("➕ Adicionar data personalizada", expanded=False):
-            with st.form("form_data_custom", clear_on_submit=True):
-                d_nome = st.text_input("Nome do evento")
-                d_data = st.date_input("Data", value=dt_date.today())
-                d_tipo = st.selectbox("Tipo", ["comercial", "moda", "feriado", "fiscal"])
-                if st.form_submit_button("Salvar", type="primary"):
-                    st.success(f"Salvo! (nota: datas personalizadas são temporárias — serão adicionadas permanentemente em breve)")
+            with st.expander("➕ Adicionar data personalizada", expanded=False):
+                with st.form("form_data_custom", clear_on_submit=True):
+                    d_nome = st.text_input("Nome do evento")
+                    d_data = st.date_input("Data", value=dt_date.today())
+                    d_tipo = st.selectbox("Tipo", ["comercial", "moda", "feriado", "fiscal"])
+                    if st.form_submit_button("Salvar", type="primary"):
+                        st.success("Salvo! (datas permanentes em breve)")
+
+        with tab_conteudo:
+            if not notion_ok():
+                st.markdown(f"""
+<div class="wcard" style="padding:20px;text-align:center">
+  <div style="font-size:28px;margin-bottom:8px">📓</div>
+  <div style="font-size:14px;font-weight:700;color:{NAVY}">Conectar Notion</div>
+  <div style="font-size:12px;color:#9CA3AF;margin-top:6px;line-height:1.5">
+    Adicione <code>NOTION_TOKEN</code> nos secrets do Streamlit.<br>
+    Veja o .env.example para instruções.
+  </div>
+</div>""", unsafe_allow_html=True)
+            elif notion_error:
+                st.warning(f"Erro ao buscar Notion: {notion_error}")
+            elif not notion_posts:
+                st.markdown(f"""
+<div class="wcard" style="padding:20px;text-align:center">
+  <div style="font-size:28px;margin-bottom:6px">📭</div>
+  <div style="font-size:13px;color:#9CA3AF">Nenhum post encontrado para esta semana no Notion.</div>
+</div>""", unsafe_allow_html=True)
+            else:
+                STATUS_COLORS = {
+                    "Publicado":  ("#DCFCE7","#15803D"),
+                    "Publicar":   ("#DBEAFE","#1D4ED8"),
+                    "Gravar":     ("#FEF9C3","#92400E"),
+                    "Em edição":  ("#EDE9FE","#5B21B6"),
+                    "Ideia":      ("#F3F4F6","#6B7280"),
+                }
+                st.markdown(f"""
+<div class="wcard" style="max-height:440px;overflow-y:auto;padding:16px 18px">
+  <div style="font-size:14px;font-weight:700;color:{NAVY};margin-bottom:12px">
+    Semana atual — {len(notion_posts)} posts
+  </div>
+""", unsafe_allow_html=True)
+                for post in notion_posts:
+                    sb, sc = STATUS_COLORS.get(post["status"], ("#F3F4F6","#6B7280"))
+                    data_fmt = post["data_post"].strftime("%d/%m") if post.get("data_post") else post.get("dia","?")
+                    gcal = gcal_link(
+                        f"{post['plataforma']} — {post['titulo']}",
+                        post["data_post"].strftime("%Y-%m-%d") if post.get("data_post") else "",
+                        post.get("detalhes","")[:200]
+                    ) if post.get("data_post") else ""
+                    gcal_btn = (
+                        f'<a href="{gcal}" target="_blank" '
+                        f'style="font-size:9px;color:#9CA3AF;text-decoration:none;'
+                        f'border:1px solid #E5E7EB;border-radius:4px;padding:1px 5px">+GCal</a>'
+                    ) if gcal else ""
+                    notion_link = (
+                        f'<a href="{post["url"]}" target="_blank" '
+                        f'style="font-size:9px;color:{PINK};text-decoration:none;'
+                        f'border:1px solid #F9D2E9;border-radius:4px;padding:1px 5px">Notion</a>'
+                    ) if post.get("url") else ""
+                    st.markdown(f"""
+  <div style="padding:9px 0;border-bottom:1px solid #F0F2F5">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <span style="font-size:14px">{post['icon']}</span>
+      <span style="font-size:11.5px;font-weight:700;color:{NAVY};flex:1">{post['titulo'][:45]}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+      <span style="background:#F0F2F5;color:#374151;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:600">{post['plataforma']}</span>
+      <span style="background:{sb};color:{sc};padding:1px 7px;border-radius:99px;font-size:10px;font-weight:600">{post['status']}</span>
+      <span style="font-size:10px;color:#9CA3AF">{data_fmt} ({post['dia']})</span>
+      {gcal_btn}
+      {notion_link}
+    </div>
+  </div>
+""", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            if notion_ok() and notion_posts:
+                if st.button("↺ Atualizar conteúdo Notion", use_container_width=True,
+                             key="btn_refresh_notion"):
+                    st.cache_data.clear()
+                    st.rerun()
+
+    # ── Exportar para Google Calendar (ICS) ──────────────────────────────────
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    with st.expander("📅 Exportar calendário para Google Calendar / iPhone", expanded=False):
+        st.markdown(f"""
+<div style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:12px">
+  Baixe o arquivo <strong>.ics</strong> e importe no Google Calendar — os eventos aparecem
+  automaticamente no celular com notificações.<br>
+  <span style="color:#9CA3AF;font-size:12px">
+  Google Calendar → Configurações → Importar → selecione o arquivo
+  </span>
+</div>
+""", unsafe_allow_html=True)
+        _inc_prod  = st.checkbox("Incluir ordens de produção", value=True, key="ics_prod")
+        _inc_cont  = st.checkbox("Incluir posts do Notion", value=True, key="ics_cont")
+        if st.button("⬇ Gerar arquivo .ics", type="primary", key="btn_ics"):
+            _posts_ics = notion_posts if (_inc_cont and notion_ok()) else []
+            _ics_str   = build_ics(
+                datas_especiais=DATAS_ESPECIAIS,
+                ordens=ordens_cal if _inc_prod else [],
+                notion_posts=_posts_ics,
+                include_producao=_inc_prod,
+                include_conteudo=_inc_cont,
+            )
+            st.download_button(
+                label="📥 Baixar backbe_calendario.ics",
+                data=_ics_str.encode("utf-8"),
+                file_name="backbe_calendario.ics",
+                mime="text/calendar",
+                key="download_ics",
+            )
 
     # ── Gantt de ordens de produção ───────────────────────────────────────────
     st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
