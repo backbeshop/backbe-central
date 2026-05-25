@@ -261,23 +261,33 @@ def init_db():
                 (cat, desc, preco_mae, round(preco_mae * 0.7, 2))
             )
 
-    # Tecidos de exemplo
-    c.execute("SELECT COUNT(*) FROM tecidos")
-    if c.fetchone()[0] == 0:
-        tecidos = [
-            ("Viscose Lisa", "tecido", "metro", None, 16.0, None, 1.5, "diversas"),
-            ("Viscose Estampada", "tecido", "metro", None, 20.0, None, 1.5, "diversas"),
-            ("Crepe Malha", "malha", "kg", 35.0, None, 200.0, 1.6, "diversas"),
-            ("Moletom Grosso", "malha", "kg", 40.0, None, 350.0, 1.5, "cinza mescla"),
-            ("Musseline", "tecido", "metro", None, 14.0, None, 1.5, "diversas"),
-            ("Jeans Médio", "jeans", "metro", None, 22.0, None, 1.5, "azul"),
-            ("Linho/Viscolinho", "tecido", "metro", None, 24.0, None, 1.5, "diversas"),
-        ]
-        for row in tecidos:
+    # Tecidos Backbe — seed persistente (inserido se não existir pelo nome)
+    # (nome, tipo, unidade, preco_kg, preco_metro, peso_gsm, largura_m, cor, composicao, fornecedor)
+    TECIDOS_SEED = [
+        ("Tricoline",           "tecido", "metro", None, 12.90, None,  1.5, "diversas", "85% poliéster e 15% algodão", "gabtextil"),
+        ("Alfaiataria Barbie",  "tecido", "metro", None, 12.90, None,  1.5, "diversas", "95% poliéster e 5% elastano", "gabtextil"),
+        ("Gabardine",           "tecido", "metro", None, 12.50, 225.0, 1.5, "diversas", "100% poliéster",              "loja de tecidos"),
+        ("Two Way",             "malha",  "metro", None, 15.90, None,  1.5, "diversas", "96% poliéster 4% elastano",   "loja de tecidos"),
+        ("Duna Air Flow",       "tecido", "metro", None, 13.60, None,  1.5, "diversas", "",                            "loja de tecidos"),
+        ("Duna Bordado",        "tecido", "metro", None, 14.90, None,  1.5, "diversas", "",                            "loja de tecidos"),
+        ("Crepe Amanda",        "tecido", "metro", None, 14.20, None,  1.5, "diversas", "",                            "loja de tecidos"),
+        ("Crepe com aplicação", "tecido", "metro", None, 14.90, None,  1.5, "diversas", "",                            "loja de tecidos"),
+        ("Viscolinho",          "tecido", "metro", None, 12.90, None,  1.5, "diversas", "100% viscose",                "gab textil"),
+    ]
+    for (nome, tipo, unidade, preco_kg, preco_metro, gsm, largura, cor, composicao, forn_nome) in TECIDOS_SEED:
+        exists = c.execute("SELECT id FROM tecidos WHERE nome=?", (nome,)).fetchone()
+        if not exists:
             c.execute(
-                "INSERT INTO tecidos (nome, tipo, unidade, preco_kg, preco_metro, peso_gsm, largura_m, cor) VALUES (?,?,?,?,?,?,?,?)",
-                row
+                "INSERT INTO tecidos (nome, tipo, unidade, preco_kg, preco_metro, peso_gsm, largura_m, cor, observacoes) "
+                "VALUES (?,?,?,?,?,?,?,?,?)",
+                (nome, tipo, unidade, preco_kg, preco_metro, gsm, largura, cor, composicao)
             )
+            tec_id = c.lastrowid
+            if forn_nome:
+                c.execute(
+                    "INSERT INTO tecidos_fornecedores (tecido_id, fornecedor) VALUES (?,?)",
+                    (tec_id, forn_nome)
+                )
 
     conn.commit()
     conn.close()
