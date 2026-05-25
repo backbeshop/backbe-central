@@ -15,7 +15,7 @@ HEADERS   = {
 }
 
 def _get(endpoint, params=None):
-    r = requests.get(f"{BASE_URL}/{endpoint}", headers=HEADERS, params=params, timeout=15, verify=False)
+    r = requests.get(f"{BASE_URL}/{endpoint}", headers=HEADERS, params=params, timeout=45, verify=False)
     r.raise_for_status()
     return r.json()
 
