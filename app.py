@@ -279,6 +279,7 @@ with st.sidebar:
         "🔩 Aviamentos",
         "🏭 Ordens de Produção",
         "💰 Calculadora CMV",
+        "💳 Financeiro",
         "📈 Crescimento",
         "👩 Relatório Mãe",
         "📄 Declaração MEI",
@@ -1353,6 +1354,261 @@ elif pagina == "💰 Calculadora CMV":
                 st.metric("Markup", f"{mk:.1f}x", delta=f"Margem {margem:.0f}%")
                 st.metric("Lucro líquido/peça", f"R${lucro:.2f}", delta=f"Taxas -R${taxas:.2f}")
                 st.write(f"**Status:** {status}")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════
+#  PÁGINA — FINANCEIRO (DRE Mensal)
+# ══════════════════════════════════════════════════════════════════════════════
+elif pagina == "💳 Financeiro":
+    st.title("💳 Controle Financeiro Mensal")
+    st.caption("DRE mensal com faturamento da Nuvemshop, custos fixos editáveis e extrato bancário.")
+
+    conn = get_conn()
+    MESES_NOME = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]
+
+    ano_fin = st.selectbox("Ano", list(range(2024, 2028)), index=1, key="fin_ano")
+
+    tab_dre, tab_extrato = st.tabs(["📊 DRE Mensal", "🏦 Extrato Bancário"])
+
+    # ── garante que existam registros para os 12 meses ──────────────────────
+    for m in range(1, 13):
+        conn.execute(
+            "INSERT OR IGNORE INTO dre_custos (ano, mes) VALUES (?,?)", (ano_fin, m)
+        )
+    conn.commit()
+    custos = {
+        r["mes"]: r for r in rows_to_list(
+            conn.execute("SELECT * FROM dre_custos WHERE ano=? ORDER BY mes", (ano_fin,)).fetchall()
+        )
+    }
+
+    # ── receita mensal da Nuvemshop ─────────────────────────────────────────
+    try:
+        all_orders = fetch_all_orders()
+        rev_mes = {}
+        vnd_mes = {}
+        for o in all_orders:
+            d = o["created_at"][:7]  # "YYYY-MM"
+            yr, mn = int(d[:4]), int(d[5:7])
+            if yr == ano_fin:
+                rev_mes[mn] = rev_mes.get(mn, 0) + float(o.get("total") or 0)
+                vnd_mes[mn] = vnd_mes.get(mn, 0) + 1
+    except Exception:
+        rev_mes, vnd_mes = {}, {}
+
+    with tab_dre:
+        st.markdown("#### Comissões (%)")
+        cc1, cc2, _ = st.columns([1,1,4])
+        pct_mae   = cc1.number_input("Comissão Mãe %",   min_value=0.0, max_value=100.0, value=2.0,  step=0.5, key="fin_pct_mae")
+        pct_bella = cc2.number_input("Comissão Bella %",  min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="fin_pct_bella")
+        st.divider()
+
+        # ── Tabela editável de custos fixos ─────────────────────────────────
+        st.markdown("#### Custos Fixos por Mês")
+        st.caption("Preencha os valores mensais. Os campos de receita vêm da Nuvemshop automaticamente.")
+
+        df_dre_input = pd.DataFrame([{
+            "Mês":            MESES_NOME[m-1],
+            "_mes":           m,
+            "Aluguel Sala1":  float(custos[m].get("aluguel_sala1") or 0),
+            "Aluguel Sala2":  float(custos[m].get("aluguel_sala2") or 0),
+            "Energia Sala1":  float(custos[m].get("energia_sala1") or 0),
+            "Energia Sala2":  float(custos[m].get("energia_sala2") or 0),
+            "Internet Sala1": float(custos[m].get("internet_sala1") or 0),
+            "Internet Sala2": float(custos[m].get("internet_sala2") or 0),
+            "Outros Fixos":   float(custos[m].get("outros_fixos") or 0),
+        } for m in range(1, 13)])
+
+        edited_dre = st.data_editor(
+            df_dre_input.drop(columns=["_mes"]),
+            use_container_width=True,
+            hide_index=True,
+            height=40 + 36 * 12,
+            disabled=["Mês"],
+            column_config={
+                c: st.column_config.NumberColumn(format="R$%.2f", step=10.0)
+                for c in ["Aluguel Sala1","Aluguel Sala2","Energia Sala1","Energia Sala2",
+                          "Internet Sala1","Internet Sala2","Outros Fixos"]
+            },
+            key="edit_dre_custos"
+        )
+
+        if st.button("💾 Salvar custos fixos", type="primary"):
+            for i, row in edited_dre.iterrows():
+                m = i + 1
+                conn.execute("""
+                    UPDATE dre_custos SET
+                        aluguel_sala1=?, aluguel_sala2=?,
+                        energia_sala1=?, energia_sala2=?,
+                        internet_sala1=?, internet_sala2=?,
+                        outros_fixos=?, comissao_mae_pct=?, comissao_bella_pct=?
+                    WHERE ano=? AND mes=?
+                """, (
+                    float(row["Aluguel Sala1"]), float(row["Aluguel Sala2"]),
+                    float(row["Energia Sala1"]), float(row["Energia Sala2"]),
+                    float(row["Internet Sala1"]), float(row["Internet Sala2"]),
+                    float(row["Outros Fixos"]), pct_mae, pct_bella,
+                    ano_fin, m
+                ))
+            conn.commit()
+            st.success("✅ Custos fixos salvos!")
+            st.rerun()
+
+        st.divider()
+
+        # ── DRE calculada ────────────────────────────────────────────────────
+        st.markdown("#### DRE — Resultado por Mês")
+        dre_rows = []
+        lucro_ant = None
+        for i, row in edited_dre.iterrows():
+            m = i + 1
+            fat   = rev_mes.get(m, 0)
+            vendas = vnd_mes.get(m, 0)
+            ticket = fat / vendas if vendas else 0
+            com_mae   = fat * pct_mae   / 100
+            com_bella = fat * pct_bella / 100
+            total_com = com_mae + com_bella
+            total_fixo = (float(row["Aluguel Sala1"]) + float(row["Aluguel Sala2"]) +
+                          float(row["Energia Sala1"]) + float(row["Energia Sala2"]) +
+                          float(row["Internet Sala1"]) + float(row["Internet Sala2"]) +
+                          float(row["Outros Fixos"]) + total_com)
+            lucro  = fat - total_fixo
+            margem = (lucro / fat * 100) if fat else 0
+            cresc  = ((lucro / lucro_ant - 1) * 100) if (lucro_ant and lucro_ant != 0) else 0
+            dre_rows.append({
+                "Mês":            MESES_NOME[m-1],
+                "Vendas":         vendas,
+                "Ticket Médio":   ticket,
+                "Faturamento":    fat,
+                "Com. Mãe":       com_mae,
+                "Com. Bella":     com_bella,
+                "Total Fixos":    total_fixo,
+                "Lucro Líquido":  lucro,
+                "Margem %":       margem,
+                "Crescimento %":  cresc if lucro_ant is not None else 0,
+            })
+            if fat > 0:
+                lucro_ant = lucro
+
+        df_dre = pd.DataFrame(dre_rows)
+        st.dataframe(
+            df_dre,
+            use_container_width=True,
+            hide_index=True,
+            height=40 + 36 * 12,
+            column_config={
+                "Ticket Médio":  st.column_config.NumberColumn(format="R$%.2f"),
+                "Faturamento":   st.column_config.NumberColumn(format="R$%.2f"),
+                "Com. Mãe":      st.column_config.NumberColumn(format="R$%.2f"),
+                "Com. Bella":    st.column_config.NumberColumn(format="R$%.2f"),
+                "Total Fixos":   st.column_config.NumberColumn(format="R$%.2f"),
+                "Lucro Líquido": st.column_config.NumberColumn(format="R$%.2f"),
+                "Margem %":      st.column_config.NumberColumn(format="%.1f%%"),
+                "Crescimento %": st.column_config.NumberColumn(format="%.1f%%"),
+            }
+        )
+
+        # KPIs do ano
+        fat_ano   = sum(r["Faturamento"]   for r in dre_rows)
+        lucro_ano = sum(r["Lucro Líquido"] for r in dre_rows)
+        fixos_ano = sum(r["Total Fixos"]   for r in dre_rows)
+        mg_ano    = (lucro_ano / fat_ano * 100) if fat_ano else 0
+        st.divider()
+        k1,k2,k3,k4 = st.columns(4)
+        k1.metric("Faturamento anual",  f"R${fat_ano:,.2f}")
+        k2.metric("Total custos fixos", f"R${fixos_ano:,.2f}")
+        k3.metric("Lucro anual",        f"R${lucro_ano:,.2f}")
+        k4.metric("Margem anual",       f"{mg_ano:.1f}%")
+
+    # ── Extrato bancário ──────────────────────────────────────────────────────
+    with tab_extrato:
+        mes_ext = st.selectbox("Mês do extrato", range(1,13),
+                               format_func=lambda m: MESES_NOME[m-1], key="fin_mes_ext")
+
+        st.markdown(f"#### 📎 Upload — {MESES_NOME[mes_ext-1]} {ano_fin}")
+        st.info("Envie o PDF do extrato Nubank ou InfinitePay. As transações ficam salvas para análise.")
+
+        up_ext = st.file_uploader("Selecionar PDF(s)", type=["pdf"],
+                                  accept_multiple_files=True, key=f"fin_up_{ano_fin}_{mes_ext}")
+
+        if up_ext:
+            if st.button(f"⚙️ Processar {len(up_ext)} arquivo(s)", type="primary", key="fin_proc"):
+                novos = 0
+                with st.spinner("Lendo PDFs..."):
+                    for f in up_ext:
+                        resultado = parse_nubank_pdf(f.read(), f.name)
+                        for t in resultado["transacoes"]:
+                            if t.get("data"):
+                                try:
+                                    parts = t["data"].split("/")
+                                    tx_mes, tx_ano = int(parts[1]), int(parts[2])
+                                    if tx_ano != ano_fin or tx_mes != mes_ext:
+                                        continue
+                                except Exception:
+                                    pass
+                            conn.execute("""
+                                INSERT INTO dre_transacoes
+                                (ano, mes, data, descricao, valor, tipo, arquivo)
+                                VALUES (?,?,?,?,?,?,?)
+                            """, (ano_fin, mes_ext, t["data"], t["descricao"],
+                                  t["valor"], t["tipo"], f.name))
+                            novos += 1
+                conn.commit()
+                if novos > 0:
+                    st.success(f"✅ {novos} transações importadas!")
+                else:
+                    st.warning("Nenhuma transação encontrada para este mês/ano.")
+                st.rerun()
+
+        st.divider()
+
+        # Transações do mês selecionado
+        txs_ext = rows_to_list(conn.execute(
+            "SELECT * FROM dre_transacoes WHERE ano=? AND mes=? ORDER BY data, tipo",
+            (ano_fin, mes_ext)
+        ).fetchall())
+
+        if not txs_ext:
+            st.info("Nenhuma transação importada para este mês. Faça upload do extrato acima.")
+        else:
+            entradas_e = [t for t in txs_ext if t["tipo"] == "entrada"]
+            saidas_e   = [t for t in txs_ext if t["tipo"] == "saida"]
+            tot_ent = sum(t["valor"] for t in entradas_e if t.get("contar"))
+            tot_sai = sum(t["valor"] for t in saidas_e   if t.get("contar"))
+
+            k1, k2, k3 = st.columns(3)
+            k1.metric("📥 Total Entradas", f"R${tot_ent:,.2f}", f"{len(entradas_e)} transações")
+            k2.metric("📤 Total Saídas",   f"R${tot_sai:,.2f}", f"{len(saidas_e)} transações")
+            k3.metric("💰 Saldo",          f"R${tot_ent - tot_sai:,.2f}")
+
+            t_ent, t_sai = st.tabs(["📥 Entradas", "📤 Saídas"])
+
+            with t_ent:
+                if entradas_e:
+                    st.dataframe(
+                        pd.DataFrame([{"Data": t["data"], "Descrição": t["descricao"],
+                                       "Valor": t["valor"]} for t in entradas_e]),
+                        use_container_width=True, hide_index=True,
+                        height=min(40 + 36*len(entradas_e), 3000),
+                        column_config={"Valor": st.column_config.NumberColumn(format="R$%.2f")}
+                    )
+            with t_sai:
+                if saidas_e:
+                    st.dataframe(
+                        pd.DataFrame([{"Data": t["data"], "Descrição": t["descricao"],
+                                       "Valor": t["valor"]} for t in saidas_e]),
+                        use_container_width=True, hide_index=True,
+                        height=min(40 + 36*len(saidas_e), 3000),
+                        column_config={"Valor": st.column_config.NumberColumn(format="R$%.2f")}
+                    )
+
+            if st.button("🗑️ Limpar transações deste mês", key="fin_clear_ext"):
+                conn.execute("DELETE FROM dre_transacoes WHERE ano=? AND mes=?", (ano_fin, mes_ext))
+                conn.commit()
+                st.rerun()
+
+    conn.close()
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA 6 — CRESCIMENTO

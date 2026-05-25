@@ -225,6 +225,40 @@ def init_db():
         subtotal REAL DEFAULT 0
     )""")
 
+    # DRE — Custos fixos mensais
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS dre_custos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ano INTEGER NOT NULL,
+        mes INTEGER NOT NULL,
+        aluguel_sala1 REAL DEFAULT 0,
+        aluguel_sala2 REAL DEFAULT 0,
+        energia_sala1 REAL DEFAULT 0,
+        energia_sala2 REAL DEFAULT 0,
+        internet_sala1 REAL DEFAULT 0,
+        internet_sala2 REAL DEFAULT 0,
+        outros_fixos REAL DEFAULT 0,
+        comissao_mae_pct REAL DEFAULT 2.0,
+        comissao_bella_pct REAL DEFAULT 10.0,
+        observacoes TEXT,
+        UNIQUE(ano, mes)
+    )""")
+
+    # DRE — Transações do extrato bancário por mês
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS dre_transacoes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ano INTEGER NOT NULL,
+        mes INTEGER NOT NULL,
+        data TEXT,
+        descricao TEXT,
+        valor REAL,
+        tipo TEXT,
+        categoria TEXT DEFAULT 'outro',
+        arquivo TEXT,
+        contar INTEGER DEFAULT 1
+    )""")
+
     # Costureiras padrão
     c.execute("SELECT COUNT(*) FROM costureiras")
     if c.fetchone()[0] == 0:
