@@ -645,7 +645,8 @@ if pagina == "◆ Dashboard":
     # ══ TAB MENSAL ════════════════════════════════════════════════════════════
     with tab_mensal:
 
-        k1, k2, k3, k4 = st.columns(4, gap="medium")
+        # ── Linha 1: Faturamento + Pedidos ───────────────────────────────────
+        k1, k2 = st.columns(2, gap="medium")
 
         with k1:
             st.markdown(f"""
@@ -666,6 +667,9 @@ if pagina == "◆ Dashboard":
   {_pbar_goal(f"{ped_atual} de {int(meta_ped)}", prog_ped, "#2563EB")}
   <div class="kcard-delta" style="background:#DBEAFE;color:#1D4ED8">ticket R${ticket_medio:.0f}</div>
 </div>""", unsafe_allow_html=True)
+
+        # ── Linha 2: Clientes VIP + Ticket Médio ─────────────────────────────
+        k3, k4 = st.columns(2, gap="medium")
 
         with k3:
             st.markdown(f"""
@@ -690,7 +694,7 @@ if pagina == "◆ Dashboard":
         st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
 
         # ── gráfico 2026 + alertas ────────────────────────────────────────────
-        chart_col, alert_col = st.columns([6.5, 3.5], gap="large")
+        chart_col, alert_col = st.columns([2, 1], gap="large")
 
         with chart_col:
             months_2026 = sorted([m for m in ns_monthly if m.startswith("2026")])
@@ -825,7 +829,7 @@ if pagina == "◆ Dashboard":
         st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
 
         # ── Top Produtos + Metas ──────────────────────────────────────────────
-        b1_m, b2_m = st.columns([6, 4], gap="large")
+        b1_m, b2_m = st.columns([3, 2], gap="large")
 
         with b1_m:
             st.markdown(f"""
@@ -923,8 +927,9 @@ if pagina == "◆ Dashboard":
     # ══ TAB ANUAL ════════════════════════════════════════════════════════════
     with tab_anual:
 
-        # ── KPI cards anuais ─────────────────────────────────────────────────
-        a1, a2, a3, a4 = st.columns(4, gap="medium")
+        # ── KPI cards anuais — grade 2×2 ─────────────────────────────────────
+        a1, a2 = st.columns(2, gap="medium")
+        meses_c_dados = max(len(ped_2026), 1)
 
         with a1:
             st.markdown(f"""
@@ -932,16 +937,18 @@ if pagina == "◆ Dashboard":
   <div class="kcard-label" style="color:{PINK}">Faturamento — {ANO_DASH}</div>
   <div class="kcard-val">R${fat_ano/1000:.1f}k</div>
   <div class="kcard-sub">{len([m for m in rev_2026 if rev_2026[m]>0])} meses com receita</div>
+  {_pbar_goal(f"R${fat_ano:,.0f} de R${meta_fat_anual:,.0f}", prog_anual, PINK)}
 </div>""", unsafe_allow_html=True)
 
         with a2:
-            meses_c_dados = max(len(ped_2026), 1)
             st.markdown(f"""
 <div class="kcard" style="background:#EFF6FF;border-color:#BFDBFE">
   <div class="kcard-label" style="color:#2563EB">Pedidos — {ANO_DASH}</div>
   <div class="kcard-val">{ped_ano}</div>
   <div class="kcard-sub">media de {ped_ano/meses_c_dados:.0f} por mes</div>
 </div>""", unsafe_allow_html=True)
+
+        a3, a4 = st.columns(2, gap="medium")
 
         with a3:
             st.markdown(f"""
@@ -962,7 +969,7 @@ if pagina == "◆ Dashboard":
         st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
 
         # ── gráfico 12 meses + segmentos ──────────────────────────────────────
-        ca, cs = st.columns([6.5, 3.5], gap="large")
+        ca, cs = st.columns([2, 1], gap="large")
 
         with ca:
             st.markdown(f"""
