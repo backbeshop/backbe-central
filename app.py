@@ -83,40 +83,45 @@ html, body, [class*="css"], .stApp, button, input, select, textarea {{
     max-width: 1440px;
 }}
 
-/* ── Sidebar — glassmorphism claro ──────────────────────────── */
-section[data-testid="stSidebar"] > div:first-child,
+/* ── Sidebar — largura compacta + glassmorphism ─────────────── */
 section[data-testid="stSidebar"],
-div[data-testid="stSidebarContent"] {{
-    background: rgba(255,255,255,0.82) !important;
+section[data-testid="stSidebar"] > div:first-child {{
+    width: 190px !important;
+    min-width: 190px !important;
+    max-width: 190px !important;
+    background: rgba(255,255,255,0.92) !important;
     backdrop-filter: blur(24px) !important;
     -webkit-backdrop-filter: blur(24px) !important;
     border-right: 1px solid rgba(201,107,160,0.10) !important;
+}}
+div[data-testid="stSidebarContent"] {{
+    background: transparent !important;
+    padding: 0 8px !important;
 }}
 
 /* ── Nav item label (seção) ─────────────────────────────────── */
 .nav-section-label {{
     font-size: 9px; font-weight: 700; color: #C9D0D8;
     text-transform: uppercase; letter-spacing: 0.16em;
-    padding: 0 10px; margin: 12px 0 3px 0;
+    padding: 0 6px; margin: 10px 0 1px 0;
 }}
 
 /* ── Nav item ativo (div) ───────────────────────────────────── */
 .nav-active {{
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 10px 8px 11px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px 5px 9px;
     background: linear-gradient(90deg, #FDF2F8, #fff8fb);
-    border-radius: 10px;
+    border-radius: 8px;
     border-left: 3px solid {PINK};
-    margin: 1px 0;
+    margin: 0;
     cursor: default;
 }}
-.nav-active .ni {{ font-size: 15px; width: 22px; text-align:center; flex-shrink:0; }}
-.nav-active .nl {{ font-size: 13px; font-weight: 700; color: {PINK}; letter-spacing:-0.01em; }}
+.nav-active .nl {{ font-size: 12.5px; font-weight: 700; color: {PINK}; letter-spacing:-0.01em; }}
 
 /* ── Botões nav (inativos) ──────────────────────────────────── */
 section[data-testid="stSidebar"] .stButton,
 div[data-testid="stSidebarContent"] .stButton {{
-    margin: 1px 0 !important;
+    margin: 0 !important;
     width: 100% !important;
 }}
 section[data-testid="stSidebar"] .stButton > button,
@@ -124,15 +129,18 @@ div[data-testid="stSidebarContent"] .stButton > button {{
     background: transparent !important;
     border: 0 !important;
     color: #6B7280 !important;
-    border-radius: 10px !important;
-    font-size: 13px !important;
+    border-radius: 8px !important;
+    font-size: 12.5px !important;
     font-weight: 500 !important;
     text-align: left !important;
     justify-content: flex-start !important;
     align-items: center !important;
-    padding: 8px 10px 8px 12px !important;
+    padding: 5px 8px 5px 10px !important;
     letter-spacing: -0.01em !important;
     width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    line-height: 1.3 !important;
     transition: background 0.13s ease, color 0.13s ease !important;
 }}
 section[data-testid="stSidebar"] .stButton > button > div,
@@ -443,8 +451,8 @@ _NAV = [
 with st.sidebar:
     # Logo
     st.markdown(f"""
-<div style="padding:10px 4px 18px 4px">
-  <div style="display:flex;align-items:center;gap:10px">
+<div style="padding:8px 4px 12px 4px">
+  <div style="display:flex;align-items:center;gap:8px">
     <div style="width:38px;height:38px;background:white;
                 border-radius:11px;display:flex;align-items:center;
                 justify-content:center;flex-shrink:0;
@@ -487,7 +495,7 @@ with st.sidebar:
 
     # Configurações
     st.markdown("""
-<div style="height:1px;background:#F0F2F5;margin:14px 0 4px 0"></div>
+<div style="height:1px;background:#F0F2F5;margin:10px 0 2px 0"></div>
 <div class="nav-section-label">CONFIGURACOES</div>
 """, unsafe_allow_html=True)
     if st.button("↺  Atualizar Nuvemshop", use_container_width=True,
