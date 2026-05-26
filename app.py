@@ -438,6 +438,7 @@ _NAV = [
         ("≋ Tecidos",            "Tecidos"),
         ("⊕ Aviamentos",         "Aviamentos"),
         ("⊞ Ordens de Producao", "Ordens de Producao"),
+        ("✂ Corte Vo Marcia",    "Corte Vo Marcia"),
     ]),
     ("FINANCEIRO", [
         ("▣ Financeiro",         "Financeiro"),
@@ -3703,6 +3704,288 @@ elif pagina == "⊕ Aviamentos":
                     conn.commit()
                     st.success(f"✅ **{nome_a}** cadastrado!")
                     st.rerun()
+
+    conn.close()
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  PÁGINA — CORTE VÓ MARCIA
+# ══════════════════════════════════════════════════════════════════════════════
+elif pagina == "✂ Corte Vo Marcia":
+    st.title("Corte — Vó Marcia")
+    st.caption("Controle mensal dos cortes. Marque quais foram feitos pela Vó para calcular o pagamento.")
+
+    conn = get_conn()
+
+    # Garante que as tabelas existem (migração defensiva)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS relatorio_corte (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mes INTEGER NOT NULL, ano INTEGER NOT NULL,
+            cortadora TEXT DEFAULT 'Vo Marcia',
+            total_pecas INTEGER DEFAULT 0,
+            total_corte REAL DEFAULT 0,
+            pago INTEGER DEFAULT 0, observacoes TEXT,
+            UNIQUE(mes, ano)
+        )""")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS relatorio_corte_itens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            relatorio_id INTEGER NOT NULL REFERENCES relatorio_corte(id),
+            produto TEXT NOT NULL,
+            quantidade INTEGER DEFAULT 0,
+            valor_corte_total REAL DEFAULT 0,
+            valor_corte_unit REAL DEFAULT 0,
+            feito_pela_vo INTEGER DEFAULT 1
+        )""")
+    conn.commit()
+
+    MESES_C = ["Janeiro","Fevereiro","Marco","Abril","Maio","Junho",
+               "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]
+
+    col_mc, col_ac = st.columns(2)
+    mes_c = col_mc.selectbox("Mês", range(1,13), index=datetime.now().month-1,
+                              format_func=lambda x: MESES_C[x-1])
+    ano_c = int(col_ac.number_input("Ano", min_value=2020, max_value=2030,
+                                     value=datetime.now().year, step=1))
+
+    conn.execute(
+        "INSERT OR IGNORE INTO relatorio_corte (mes, ano) VALUES (?,?)",
+        (mes_c, ano_c)
+    )
+    conn.commit()
+    rel_c = row_to_dict(conn.execute(
+        "SELECT * FROM relatorio_corte WHERE mes=? AND ano=?", (mes_c, ano_c)
+    ).fetchone())
+    rel_c_id = rel_c["id"]
+
+    def _recalc_corte(conn, rid):
+        rows = conn.execute(
+            "SELECT quantidade, valor_corte_total, feito_pela_vo "
+            "FROM relatorio_corte_itens WHERE relatorio_id=?", (rid,)
+        ).fetchall()
+        total_pecas = sum(r["quantidade"] for r in rows if r["feito_pela_vo"])
+        total_corte = sum(r["valor_corte_total"] for r in rows if r["feito_pela_vo"])
+        conn.execute(
+            "UPDATE relatorio_corte SET total_pecas=?, total_corte=? WHERE id=?",
+            (total_pecas, total_corte, rid)
+        )
+
+    tab_itens_c, tab_resumo_c, tab_hist_c = st.tabs([
+        "Itens de Corte", "Resumo do Mês", "Histórico"
+    ])
+
+    with tab_itens_c:
+        itens_c = rows_to_list(conn.execute(
+            "SELECT * FROM relatorio_corte_itens WHERE relatorio_id=? ORDER BY id",
+            (rel_c_id,)
+        ).fetchall())
+
+        if itens_c:
+            # Totalizadores
+            _tot_pecas_c = sum(i["quantidade"] for i in itens_c if i["feito_pela_vo"])
+            _tot_val_c   = sum(i["valor_corte_total"] for i in itens_c if i["feito_pela_vo"])
+            _tot_todos    = sum(i["valor_corte_total"] for i in itens_c)
+
+            kc1, kc2, kc3 = st.columns(3)
+            _kcs = "background:white;border-radius:12px;padding:12px 16px;border:1.5px solid #F0F0F0"
+            kc1.markdown(f"<div style='{_kcs}'><div style='font-size:10px;color:#9CA3AF;text-transform:uppercase;font-weight:700'>Peças (Vó)</div><div style='font-size:22px;font-weight:800;color:#1a2f4a;white-space:nowrap'>{_tot_pecas_c}</div></div>", unsafe_allow_html=True)
+            kc2.markdown(f"<div style='{_kcs}'><div style='font-size:10px;color:#9CA3AF;text-transform:uppercase;font-weight:700'>A pagar Vó</div><div style='font-size:22px;font-weight:800;color:#c96ba0;white-space:nowrap'>R${_tot_val_c:.2f}</div></div>", unsafe_allow_html=True)
+            kc3.markdown(f"<div style='{_kcs}'><div style='font-size:10px;color:#9CA3AF;text-transform:uppercase;font-weight:700'>Corte total mês</div><div style='font-size:22px;font-weight:800;color:#6B7280;white-space:nowrap'>R${_tot_todos:.2f}</div></div>", unsafe_allow_html=True)
+
+            st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+
+            # Cabeçalho da tabela
+            _hc0, _hc1, _hc2, _hc3, _hc4, _hc5, _hc6 = st.columns([3, 0.8, 1.2, 1.2, 1, 0.7, 0.7])
+            for _col, _lbl in [(_hc0,"Produto"),(_hc1,"Qtde"),(_hc2,"Total corte"),
+                                (_hc3,"R$/peça"),(_hc4,"Vó fez?"),(_hc5,""),(_hc6,"")]:
+                _col.markdown(
+                    f"<div style='font-size:10px;font-weight:700;color:#9CA3AF;"
+                    f"text-transform:uppercase;padding:3px 0'>{_lbl}</div>",
+                    unsafe_allow_html=True)
+
+            for _ic in itens_c:
+                _icid = _ic["id"]
+                _edit_key_c = f"edit_corte_{_icid}"
+
+                if st.session_state.get(_edit_key_c):
+                    _ec0,_ec1,_ec2,_ec3,_ec4,_ec5,_ec6 = st.columns([3,0.8,1.2,1.2,1,0.7,0.7])
+                    _nn = _ec0.text_input("", value=_ic["produto"],  key=f"cn_{_icid}", label_visibility="collapsed")
+                    _nq = _ec1.number_input("", value=int(_ic["quantidade"]), min_value=1, step=1, key=f"cq_{_icid}", label_visibility="collapsed")
+                    _nt = _ec2.number_input("", value=float(_ic["valor_corte_total"]), min_value=0.0, step=0.5, key=f"ct_{_icid}", label_visibility="collapsed")
+                    _ec3.markdown(f"<div style='padding:6px 0;font-size:13px;color:#6B7280'>R${(_nt/_nq):.2f}</div>", unsafe_allow_html=True)
+                    _nv = _ec4.checkbox("Vó", value=bool(_ic["feito_pela_vo"]), key=f"cv_{_icid}")
+                    if _ec5.button("Salvar", key=f"csv_{_icid}", type="primary", use_container_width=True):
+                        conn.execute(
+                            "UPDATE relatorio_corte_itens SET produto=?, quantidade=?, "
+                            "valor_corte_total=?, valor_corte_unit=?, feito_pela_vo=? WHERE id=?",
+                            (_nn, _nq, _nt, round(_nt/_nq,2), 1 if _nv else 0, _icid)
+                        )
+                        _recalc_corte(conn, rel_c_id)
+                        conn.commit()
+                        del st.session_state[_edit_key_c]
+                        st.rerun()
+                    if _ec6.button("✕", key=f"ccan_{_icid}", use_container_width=True):
+                        del st.session_state[_edit_key_c]
+                        st.rerun()
+                else:
+                    _rc0,_rc1,_rc2,_rc3,_rc4,_rc5,_rc6 = st.columns([3,0.8,1.2,1.2,1,0.7,0.7])
+                    _vo_badge = (
+                        "<span style='background:#EFF6FF;color:#1D4ED8;border-radius:6px;"
+                        "padding:2px 7px;font-size:11px;font-weight:700'>Vó</span>"
+                        if _ic["feito_pela_vo"] else
+                        "<span style='background:#F3F4F6;color:#9CA3AF;border-radius:6px;"
+                        "padding:2px 7px;font-size:11px'>Outro</span>"
+                    )
+                    _rc0.markdown(f"<div style='padding:5px 0;font-weight:600;color:#1a2f4a;font-size:13px'>{_ic['produto']}</div>", unsafe_allow_html=True)
+                    _rc1.markdown(f"<div style='padding:5px 0;color:#374151;font-size:13px'>{_ic['quantidade']}</div>", unsafe_allow_html=True)
+                    _rc2.markdown(f"<div style='padding:5px 0;font-weight:700;color:#059669;font-size:13px'>R${float(_ic['valor_corte_total']):.2f}</div>", unsafe_allow_html=True)
+                    _rc3.markdown(f"<div style='padding:5px 0;color:#6B7280;font-size:12px'>R${float(_ic['valor_corte_unit']):.2f}</div>", unsafe_allow_html=True)
+                    _rc4.markdown(f"<div style='padding:5px 0'>{_vo_badge}</div>", unsafe_allow_html=True)
+                    if _rc5.button("Editar", key=f"cedt_{_icid}", use_container_width=True):
+                        st.session_state[_edit_key_c] = True
+                        st.rerun()
+                    if _rc6.button("Excluir", key=f"cdel_{_icid}", use_container_width=True):
+                        conn.execute("DELETE FROM relatorio_corte_itens WHERE id=?", (_icid,))
+                        _recalc_corte(conn, rel_c_id)
+                        conn.commit()
+                        st.rerun()
+
+                st.markdown("<div style='height:1px;background:#F3F4F6;margin:1px 0'></div>", unsafe_allow_html=True)
+
+            # Total
+            st.markdown(
+                f"<div style='text-align:right;font-weight:800;font-size:15px;"
+                f"color:#c96ba0;padding:8px 0'>Total Vó: R${_tot_val_c:.2f}</div>",
+                unsafe_allow_html=True)
+
+        else:
+            st.info("Nenhum item de corte cadastrado para este mês.")
+
+        st.divider()
+        st.subheader("Adicionar corte")
+
+        # Catálogo para autocomplete
+        _cat_corte = rows_to_list(conn.execute(
+            "SELECT nome FROM produtos_backbe WHERE ativo=1 ORDER BY nome"
+        ).fetchall())
+        _cat_corte_opts = ["(digitar nome)"] + [p["nome"] for p in _cat_corte]
+
+        _prod_sel_c = st.selectbox("Produto", _cat_corte_opts, key="corte_prod_sel")
+        _prod_nome_c = (_prod_sel_c if _prod_sel_c != "(digitar nome)"
+                        else st.text_input("Nome do produto*", key="corte_prod_custom"))
+
+        _cc1, _cc2, _cc3 = st.columns([1, 1.5, 1])
+        _qtde_c   = _cc1.number_input("Quantidade", min_value=1, value=1, step=1, key="corte_qtde")
+        _total_c  = _cc2.number_input("Valor total do corte R$", min_value=0.0, step=0.5, key="corte_total")
+        _pela_vo_c = _cc3.checkbox("Feito pela Vó Marcia", value=True, key="corte_pela_vo")
+
+        if st.button("Adicionar", type="primary", key="corte_add_btn"):
+            if _prod_nome_c and _prod_nome_c != "(digitar nome)":
+                _unit_c = round(_total_c / _qtde_c, 2) if _qtde_c else 0
+                conn.execute(
+                    "INSERT INTO relatorio_corte_itens "
+                    "(relatorio_id, produto, quantidade, valor_corte_total, valor_corte_unit, feito_pela_vo) "
+                    "VALUES (?,?,?,?,?,?)",
+                    (rel_c_id, _prod_nome_c, _qtde_c, _total_c, _unit_c, 1 if _pela_vo_c else 0)
+                )
+                _recalc_corte(conn, rel_c_id)
+                conn.commit()
+                st.success(f"Adicionado: {_qtde_c}× {_prod_nome_c} — R${_total_c:.2f}")
+                st.rerun()
+
+    with tab_resumo_c:
+        rel_c2 = row_to_dict(conn.execute(
+            "SELECT * FROM relatorio_corte WHERE id=?", (rel_c_id,)
+        ).fetchone())
+        itens_c2 = rows_to_list(conn.execute(
+            "SELECT * FROM relatorio_corte_itens WHERE relatorio_id=? ORDER BY id", (rel_c_id,)
+        ).fetchall())
+
+        st.subheader(f"{MESES_C[mes_c-1]}/{ano_c} — Vó Marcia")
+
+        if itens_c2:
+            _vo_items  = [i for i in itens_c2 if i["feito_pela_vo"]]
+            _out_items = [i for i in itens_c2 if not i["feito_pela_vo"]]
+            _total_vo  = sum(i["valor_corte_total"] for i in _vo_items)
+            _total_out = sum(i["valor_corte_total"] for i in _out_items)
+
+            r1, r2, r3 = st.columns(3)
+            _kcs2 = "background:white;border-radius:12px;padding:14px 16px;border:1.5px solid #F0F0F0"
+            r1.markdown(f"<div style='{_kcs2}'><div style='font-size:10px;color:#9CA3AF;text-transform:uppercase;font-weight:700'>Peças cortadas (Vó)</div><div style='font-size:24px;font-weight:800;color:#1a2f4a;white-space:nowrap'>{sum(i['quantidade'] for i in _vo_items)}</div></div>", unsafe_allow_html=True)
+            r2.markdown(f"<div style='{_kcs2}'><div style='font-size:10px;color:#9CA3AF;text-transform:uppercase;font-weight:700'>A pagar</div><div style='font-size:24px;font-weight:800;color:#c96ba0;white-space:nowrap'>R${_total_vo:.2f}</div></div>", unsafe_allow_html=True)
+            r3.markdown(f"<div style='{_kcs2}'><div style='font-size:10px;color:#9CA3AF;text-transform:uppercase;font-weight:700'>Corte externo</div><div style='font-size:24px;font-weight:800;color:#6B7280;white-space:nowrap'>R${_total_out:.2f}</div></div>", unsafe_allow_html=True)
+
+            st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+
+            if _vo_items:
+                st.markdown("**Itens cortados pela Vó**")
+                _df_vo = pd.DataFrame([{
+                    "Produto": i["produto"],
+                    "Qtde": i["quantidade"],
+                    "Total R$": float(i["valor_corte_total"]),
+                    "R$/peça": float(i["valor_corte_unit"]),
+                } for i in _vo_items])
+                st.dataframe(
+                    _df_vo.style.format({"Total R$": "R${:.2f}", "R$/peça": "R${:.2f}"}),
+                    use_container_width=True, hide_index=True,
+                    height=min(40 + 35*len(_df_vo), 400)
+                )
+
+            if _out_items:
+                with st.expander(f"Cortes externos ({len(_out_items)} itens — R${_total_out:.2f})", expanded=False):
+                    for i in _out_items:
+                        st.markdown(
+                            f"<div style='display:flex;justify-content:space-between;"
+                            f"padding:6px 10px;background:#F9FAFB;border-radius:6px;margin-bottom:4px'>"
+                            f"<span style='color:#6B7280'>{i['produto']}</span>"
+                            f"<span style='color:#9CA3AF'>{i['quantidade']} peças · R${float(i['valor_corte_total']):.2f}</span>"
+                            f"</div>",
+                            unsafe_allow_html=True)
+
+            # Botão pago / pendente
+            st.divider()
+            c_pago1, c_pago2 = st.columns([2,1])
+            _pago_c = c_pago1.checkbox("Marcar como pago", value=bool(rel_c2["pago"]), key="corte_pago_chk")
+            if _pago_c != bool(rel_c2["pago"]):
+                conn.execute("UPDATE relatorio_corte SET pago=? WHERE id=?",
+                             (1 if _pago_c else 0, rel_c_id))
+                conn.commit()
+                st.rerun()
+            if _pago_c:
+                c_pago2.success("PAGO")
+            else:
+                c_pago2.warning("PENDENTE")
+
+            _obs_c = st.text_area("Observações", value=rel_c2.get("observacoes") or "", key="corte_obs")
+            if st.button("Salvar obs", key="sv_corte_obs"):
+                conn.execute("UPDATE relatorio_corte SET observacoes=? WHERE id=?",
+                             (_obs_c, rel_c_id))
+                conn.commit()
+                st.success("Salvo!")
+        else:
+            st.info("Nenhum item cadastrado para este mês.")
+
+    with tab_hist_c:
+        _hist_c = rows_to_list(conn.execute(
+            "SELECT mes, ano, total_pecas, total_corte, pago "
+            "FROM relatorio_corte ORDER BY ano DESC, mes DESC"
+        ).fetchall())
+        if _hist_c:
+            _df_hc = pd.DataFrame([{
+                "Mês": MESES_C[r["mes"]-1],
+                "Ano": r["ano"],
+                "Peças (Vó)": r["total_pecas"],
+                "Total R$": float(r["total_corte"]),
+                "Status": "PAGO" if r["pago"] else "Pendente",
+            } for r in _hist_c])
+            st.dataframe(
+                _df_hc.style.format({"Total R$": "R${:.2f}"}),
+                use_container_width=True, hide_index=True
+            )
+            st.metric("Total acumulado",
+                      f"R${sum(r['total_corte'] for r in _hist_c):.2f}")
+        else:
+            st.info("Nenhum histórico ainda.")
 
     conn.close()
 

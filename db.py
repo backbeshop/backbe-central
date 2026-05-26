@@ -225,6 +225,31 @@ def init_db():
         subtotal REAL DEFAULT 0
     )""")
 
+    # Relatório Corte — Vó Marcia
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS relatorio_corte (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mes INTEGER NOT NULL,
+        ano INTEGER NOT NULL,
+        cortadora TEXT DEFAULT 'Vo Marcia',
+        total_pecas INTEGER DEFAULT 0,
+        total_corte REAL DEFAULT 0,
+        pago INTEGER DEFAULT 0,
+        observacoes TEXT,
+        UNIQUE(mes, ano)
+    )""")
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS relatorio_corte_itens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        relatorio_id INTEGER NOT NULL REFERENCES relatorio_corte(id) ON DELETE CASCADE,
+        produto TEXT NOT NULL,
+        quantidade INTEGER DEFAULT 0,
+        valor_corte_total REAL DEFAULT 0,
+        valor_corte_unit REAL DEFAULT 0,
+        feito_pela_vo INTEGER DEFAULT 1
+    )""")
+
     # DRE — Custos fixos mensais
     c.execute("""
     CREATE TABLE IF NOT EXISTS dre_custos (
