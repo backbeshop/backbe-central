@@ -413,16 +413,15 @@ _NAV = [
     ("LOJA", [
         ("▦ Produtos",           "Produtos"),
         ("◎ CRM — Clientes",     "CRM — Clientes"),
-        ("↗ Crescimento",        "Crescimento"),
     ]),
     ("PRODUCAO", [
         ("≋ Tecidos",            "Tecidos"),
         ("⊕ Aviamentos",         "Aviamentos"),
         ("⊞ Ordens de Producao", "Ordens de Producao"),
-        ("◇ Calculadora CMV",    "Calculadora CMV"),
     ]),
     ("FINANCEIRO", [
         ("▣ Financeiro",         "Financeiro"),
+        ("↗ Crescimento",        "Crescimento"),
         ("◉ Relatorio Mae",      "Relatorio Mae"),
         ("⊛ Declaracao MEI",     "Declaracao MEI"),
     ]),
@@ -1341,26 +1340,125 @@ elif pagina == "≋ Tecidos":
         if not tecidos:
             st.info("Nenhum tecido cadastrado ainda.")
         else:
-            for t in tecidos:
-                preco_m = _calc_preco_metro(t)
-                with st.expander(f"**{t['nome']}** — {t['tipo']} | R${preco_m:.2f}/metro | Estoque: {t['estoque']} {t['estoque_unidade']}"):
-                    c1, c2, c3, c4 = st.columns(4)
-                    c1.metric("Preço/metro", f"R${preco_m:.2f}")
-                    c2.metric("Estoque", f"{t['estoque']} {t['estoque_unidade']}")
-                    if t['unidade'] == 'kg':
-                        c3.metric("Preço/kg", f"R${t['preco_kg']:.2f}")
-                        c4.metric("Peso GSM", f"{t['peso_gsm']:.0f} g/m²")
+            # ── Mapeamento de cores para CSS ──────────────────────────────────
+            _COLOR_CSS = {
+                "azul": "#3B82F6", "branco": "#F1F5F9", "rosa": "#F472B6",
+                "preto": "#1F2937", "verde": "#22C55E", "amarelo": "#EAB308",
+                "vermelho": "#EF4444", "cinza": "#9CA3AF", "bege": "#D4B896",
+                "vinho": "#7C2D12", "lilás": "#A855F7", "laranja": "#F97316",
+                "marinho": "#1E3A5F", "nude": "#DEB887", "caramelo": "#B5651D",
+                "creme": "#FFF8E7", "off-white": "#FAF9F6", "prata": "#C0C0C0",
+                "dourado": "#B8860B", "bordo": "#800020", "coral": "#FF6B6B",
+                "terracota": "#C1724F", "areia": "#C2B280",
+            }
+            _WORDS_COR = set(_COLOR_CSS.keys())
 
-                    col_est, col_btn = st.columns([2, 1])
-                    novo_est = col_est.number_input(
-                        "Atualizar estoque", value=float(t["estoque"]),
-                        step=0.5, key=f"est_{t['id']}"
-                    )
-                    if col_btn.button("💾 Salvar", key=f"save_est_{t['id']}"):
-                        conn.execute("UPDATE tecidos SET estoque=? WHERE id=?", (novo_est, t["id"]))
-                        conn.commit()
-                        st.success("Estoque atualizado!")
-                        st.rerun()
+            def _split_familia(nome: str):
+                """Separa 'Two Way Azul' em ('Two Way', 'azul')."""
+                parts = nome.rsplit(" ", 1)
+                if len(parts) == 2 and parts[1].strip().lower() in _WORDS_COR:
+                    return parts[0].strip(), parts[1].strip().lower()
+                return nome.strip(), None
+
+            # Agrupa tecidos por família
+            _familias: dict = {}
+            _sem_grupo: list = []
+            for t in tecidos:
+                familia, cor = _split_familia(t["nome"])
+                if cor:
+                    _familias.setdefault(familia, []).append((cor, t))
+                else:
+                    # Tenta usar o campo 'cor' do banco
+                    cor_db = (t.get("cor") or "").strip().lower()
+                    if cor_db:
+                        _familias.setdefault(t["nome"], []).append((cor_db, t))
+                    else:
+                        _sem_grupo.append(t)
+
+            # ── Cards por família ─────────────────────────────────────────────
+            for familia, variantes in sorted(_familias.items()):
+                estoque_total = sum(float(t["estoque"] or 0) for _, t in variantes)
+                un_ref = variantes[0][1]["estoque_unidade"] or "m"
+
+                # Cabeçalho da família
+                st.markdown(f"""
+                <div style="margin:16px 0 8px 0">
+                  <span style="font-size:15px;font-weight:700;color:#1a2f4a">{familia}</span>
+                  <span style="font-size:12px;color:#6B7280;margin-left:8px">
+                    — {len(variantes)} cor(es) · {estoque_total:.1f} {un_ref} total
+                  </span>
+                </div>""", unsafe_allow_html=True)
+
+                # Chips de cor com estoque
+                chips_html = '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px">'
+                for cor, t in sorted(variantes, key=lambda x: x[0]):
+                    pm = _calc_preco_metro(t)
+                    bg = _COLOR_CSS.get(cor, "#E5E7EB")
+                    text_col = "#FFFFFF" if cor in {"azul", "preto", "marinho", "vinho", "verde"} else "#1F2937"
+                    est = float(t["estoque"] or 0)
+                    un = t["estoque_unidade"] or "m"
+                    baixo = est < 5
+                    border = "2px solid #EF4444" if baixo else "1.5px solid #E5E7EB"
+                    chips_html += f"""
+                    <div style="border:{border};border-radius:12px;padding:10px 14px;
+                                background:white;min-width:130px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+                      <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+                        <div style="width:16px;height:16px;border-radius:50%;background:{bg};
+                                    border:1px solid rgba(0,0,0,.15);flex-shrink:0"></div>
+                        <span style="font-size:13px;font-weight:600;color:#374151;
+                                     text-transform:capitalize">{cor}</span>
+                        {"<span style='font-size:10px;color:#EF4444;font-weight:700'>BAIXO</span>" if baixo else ""}
+                      </div>
+                      <div style="font-size:17px;font-weight:800;color:#1a2f4a">{est:.1f} {un}</div>
+                      <div style="font-size:11px;color:#9CA3AF">R${pm:.2f}/m</div>
+                    </div>"""
+                chips_html += "</div>"
+                st.markdown(chips_html, unsafe_allow_html=True)
+
+                # Atualizar estoque de cada variante
+                with st.expander("Atualizar estoque", expanded=False):
+                    for cor, t in sorted(variantes, key=lambda x: x[0]):
+                        col_l, col_r = st.columns([2, 1])
+                        novo_est = col_l.number_input(
+                            f"Estoque — {cor}",
+                            value=float(t["estoque"] or 0),
+                            step=0.5, key=f"est_{t['id']}"
+                        )
+                        if col_r.button("Salvar", key=f"save_est_{t['id']}"):
+                            conn.execute("UPDATE tecidos SET estoque=? WHERE id=?",
+                                         (novo_est, t["id"]))
+                            conn.commit()
+                            st.success(f"Estoque de {t['nome']} atualizado!")
+                            st.rerun()
+
+                st.markdown(
+                    "<div style='height:1px;background:#F3F4F6;margin:12px 0'></div>",
+                    unsafe_allow_html=True
+                )
+
+            # ── Tecidos sem grupo de cor ──────────────────────────────────────
+            if _sem_grupo:
+                st.markdown("**Outros tecidos**")
+                for t in _sem_grupo:
+                    preco_m = _calc_preco_metro(t)
+                    with st.expander(
+                        f"**{t['nome']}** — {t['tipo']} | "
+                        f"R${preco_m:.2f}/m | {t['estoque']} {t['estoque_unidade']}"
+                    ):
+                        c1, c2 = st.columns(2)
+                        c1.metric("Preço/metro", f"R${preco_m:.2f}")
+                        c2.metric("Estoque", f"{t['estoque']} {t['estoque_unidade']}")
+                        col_est, col_btn = st.columns([2, 1])
+                        novo_est = col_est.number_input(
+                            "Atualizar estoque", value=float(t["estoque"]),
+                            step=0.5, key=f"est_{t['id']}"
+                        )
+                        if col_btn.button("Salvar", key=f"save_est_{t['id']}"):
+                            conn.execute("UPDATE tecidos SET estoque=? WHERE id=?",
+                                         (novo_est, t["id"]))
+                            conn.commit()
+                            st.success("Estoque atualizado!")
+                            st.rerun()
 
     with tab2:
         st.subheader("Cadastrar / Editar Tecido")
@@ -1694,14 +1792,28 @@ elif pagina == "⊞ Ordens de Producao":
     with tab_nova:
         st.subheader("Nova Ordem de Produção")
 
-        tecidos_list = rows_to_list(conn.execute("SELECT * FROM tecidos WHERE ativo=1 ORDER BY nome").fetchall())
+        tecidos_list     = rows_to_list(conn.execute("SELECT * FROM tecidos WHERE ativo=1 ORDER BY nome").fetchall())
         costureiras_list = rows_to_list(conn.execute("SELECT * FROM costureiras WHERE ativa=1").fetchall())
-        costura_precos = rows_to_list(conn.execute("SELECT * FROM costura_precos ORDER BY categoria").fetchall())
+        costura_precos   = rows_to_list(conn.execute("SELECT * FROM costura_precos ORDER BY categoria").fetchall())
+        catalogo_prod    = rows_to_list(conn.execute(
+            "SELECT * FROM produtos_backbe WHERE ativo=1 ORDER BY nome"
+        ).fetchall())
 
         with st.form("form_ordem"):
-            c1, c2 = st.columns(2)
-            produto = c1.text_input("Nome do produto*")
-            ref     = c2.text_input("Referência (ex: BL-001)")
+            # ── Produto ────────────────────────────────────────────────────
+            st.markdown("#### Produto")
+            c0a, c0b = st.columns([3, 1])
+            _cat_nomes = ["(digitar nome livre)"] + [p["nome"] for p in catalogo_prod]
+            prod_sel = c0a.selectbox("Selecionar do catálogo", _cat_nomes)
+            ref = c0b.text_input("Referência (ex: BL-001)")
+
+            # Se escolheu um produto do catálogo, pré-carrega dados
+            _prod_cat = None
+            if prod_sel != "(digitar nome livre)":
+                _prod_cat = next((p for p in catalogo_prod if p["nome"] == prod_sel), None)
+
+            produto = prod_sel if prod_sel != "(digitar nome livre)" else \
+                      st.text_input("Nome do produto*", placeholder="Ex: Calça Itália")
 
             c3, c4, c5 = st.columns(3)
             quantidade  = c3.number_input("Quantidade (peças)", min_value=1, value=10, step=1)
@@ -1709,20 +1821,40 @@ elif pagina == "⊞ Ordens de Producao":
             data_prev   = c5.date_input("Data prevista de entrega",
                                          value=datetime.today() + timedelta(days=14))
 
-            st.subheader("Tecido")
+            # ── Tecido ─────────────────────────────────────────────────────
+            st.markdown("#### Tecido")
+            # Sugestão de metragem do catálogo (metros/peça × quantidade)
+            _metros_sugerido = 0.0
+            if _prod_cat and _prod_cat.get("metragem_cm") and _prod_cat["metragem_cm"] > 0:
+                _metros_sugerido = round(_prod_cat["metragem_cm"] / 100 * quantidade, 2)
+
             c6, c7 = st.columns(2)
             tec_opts = {t["nome"]: t for t in tecidos_list}
-            tec_nome = c6.selectbox("Tecido", ["(sem tecido)"] + list(tec_opts.keys()))
-            metros = c7.number_input("Metros necessários (total)", min_value=0.0, step=0.1, value=0.0)
+            tec_nome = c6.selectbox("Tecido utilizado nesta produção",
+                                    ["(sem tecido)"] + list(tec_opts.keys()))
+            metros = c7.number_input(
+                "Metros necessários (total)",
+                min_value=0.0, step=0.1,
+                value=_metros_sugerido,
+                help="Pré-preenchido do catálogo se disponível"
+            )
 
             custo_tec = 0.0
             if tec_nome != "(sem tecido)" and tec_nome in tec_opts:
-                t = tec_opts[tec_nome]
-                pm = _calc_preco_metro(t)
+                t_obj = tec_opts[tec_nome]
+                pm = _calc_preco_metro(t_obj)
                 custo_tec = round(pm * metros, 2)
-                st.caption(f"Custo tecido: R${pm:.2f}/m × {metros:.1f}m = **R${custo_tec:.2f}** total | R${custo_tec/quantidade:.2f}/peça")
+                custo_tec_unit = round(custo_tec / quantidade, 2) if quantidade else 0
+                st.markdown(
+                    f"<div style='background:#EFF6FF;border-radius:8px;padding:8px 12px;"
+                    f"font-size:13px;color:#1D4ED8'>"
+                    f"Tecido: R${pm:.2f}/m × {metros:.1f}m = <b>R${custo_tec:.2f}</b> total"
+                    f" &nbsp;|&nbsp; <b>R${custo_tec_unit:.2f}/peça</b></div>",
+                    unsafe_allow_html=True
+                )
 
-            st.subheader("Costura")
+            # ── Costura ────────────────────────────────────────────────────
+            st.markdown("#### Costura")
             c8, c9 = st.columns(2)
             cos_opts = {c["nome"]: c for c in costureiras_list}
             cos_nome = c8.selectbox("Costureira", ["(a definir)"] + list(cos_opts.keys()))
@@ -1731,26 +1863,74 @@ elif pagina == "⊞ Ordens de Producao":
 
             custo_cos_unit = 0.0
             if cat_cos in cat_opts:
-                cp = cat_opts[cat_cos]
+                cp_obj = cat_opts[cat_cos]
                 if cos_nome != "(a definir)" and cos_nome in cos_opts:
-                    tipo = cos_opts[cos_nome]["tipo"]
-                    custo_cos_unit = cp["preco_mae"] if tipo == "mae" else cp["preco_terc"]
-                    st.caption(f"Costura ({cos_nome}, {tipo}): **R${custo_cos_unit:.2f}/peça** = R${custo_cos_unit*quantidade:.2f} total")
+                    tipo_cos = cos_opts[cos_nome]["tipo"]
+                    custo_cos_unit = cp_obj["preco_mae"] if tipo_cos == "mae" else cp_obj["preco_terc"]
+                    st.markdown(
+                        f"<div style='background:#F0FDF4;border-radius:8px;padding:8px 12px;"
+                        f"font-size:13px;color:#166534'>"
+                        f"Costura ({cos_nome}): <b>R${custo_cos_unit:.2f}/peça</b>"
+                        f" = R${custo_cos_unit*quantidade:.2f} total</div>",
+                        unsafe_allow_html=True
+                    )
 
-            st.subheader("Outros custos")
+            # ── Outros custos ──────────────────────────────────────────────
+            st.markdown("#### Outros custos")
             c10, c11, c12 = st.columns(3)
             custo_corte = c10.number_input("Corte (R$/peça)", min_value=0.0, step=0.5, value=3.0)
             custo_avia  = c11.number_input("Aviamentos (R$/peça)", min_value=0.0, step=0.5, value=8.0)
             custo_emb   = c12.number_input("Embalagem (R$/peça)", min_value=0.0, step=0.5, value=10.0)
 
-            custo_total_unit = (custo_tec / quantidade if quantidade else 0) + custo_cos_unit + custo_corte + custo_avia + custo_emb
-            custo_total_total = custo_total_unit * quantidade
-            st.success(f"**CMV estimado: R${custo_total_unit:.2f}/peça** (total: R${custo_total_total:.2f})")
+            custo_tec_unit_calc = (custo_tec / quantidade) if quantidade else 0
+            custo_total_unit    = custo_tec_unit_calc + custo_cos_unit + custo_corte + custo_avia + custo_emb
+            custo_total_total   = custo_total_unit * quantidade
+
+            # ── Resumo CMV + sugestão de preço ────────────────────────────
+            if custo_total_unit > 0:
+                preco_min   = round(custo_total_unit * 2.0, 2)
+                preco_ideal = round(custo_total_unit * 3.5, 2)
+                st.markdown(f"""
+                <div style="background:linear-gradient(135deg,#FFF0F6,#F5F3FF);
+                            border-radius:12px;padding:14px 18px;margin-top:12px;
+                            border:1.5px solid #DDD6FE">
+                  <div style="font-size:11px;font-weight:700;color:#7C3AED;
+                               text-transform:uppercase;letter-spacing:.05em;
+                               margin-bottom:8px">Custo de Produção — CMV</div>
+                  <div style="display:flex;gap:28px;flex-wrap:wrap">
+                    <div>
+                      <div style="font-size:22px;font-weight:900;color:#1a2f4a">
+                        R${custo_total_unit:.2f}
+                      </div>
+                      <div style="font-size:11px;color:#6B7280">CMV / peça</div>
+                    </div>
+                    <div>
+                      <div style="font-size:22px;font-weight:900;color:#374151">
+                        R${custo_total_total:.2f}
+                      </div>
+                      <div style="font-size:11px;color:#6B7280">CMV total lote</div>
+                    </div>
+                    <div style="border-left:1.5px solid #DDD6FE;padding-left:20px">
+                      <div style="font-size:13px;color:#6B7280">
+                        Preço mínimo (2×) &nbsp;<b style="color:#B91C1C">R${preco_min:.2f}</b>
+                      </div>
+                      <div style="font-size:13px;color:#6B7280">
+                        Preço ideal (3,5×) &nbsp;<b style="color:#059669">R${preco_ideal:.2f}</b>
+                      </div>
+                    </div>
+                  </div>
+                </div>""", unsafe_allow_html=True)
+            else:
+                st.markdown(
+                    "<div style='background:#F9FAFB;border-radius:8px;padding:10px 14px;"
+                    "font-size:13px;color:#9CA3AF'>Preencha os custos acima para ver o CMV.</div>",
+                    unsafe_allow_html=True
+                )
 
             obs = st.text_area("Observações")
-            submitted = st.form_submit_button("🚀 Lançar Produção", type="primary")
+            submitted = st.form_submit_button("Lançar Produção", type="primary")
 
-            if submitted and produto:
+            if submitted and produto and produto != "(digitar nome livre)":
                 tec_id = tec_opts[tec_nome]["id"] if tec_nome in tec_opts else None
                 cos_id = cos_opts[cos_nome]["id"] if cos_nome in cos_opts else None
                 conn.execute("""
@@ -3117,48 +3297,111 @@ elif pagina == "⊕ Aviamentos":
             for a in acabamentos:
                 by_cat.setdefault(a["categoria"] or "outro", []).append(a)
 
+            # CSS para os cards de aviamento
+            st.markdown("""
+            <style>
+            .avia-card {
+                background: white;
+                border: 1.5px solid #F0F0F0;
+                border-radius: 14px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0,0,0,.06);
+                transition: box-shadow .2s;
+                height: 100%;
+            }
+            .avia-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+            .avia-img {
+                width:100%; aspect-ratio:1/1; object-fit:cover;
+                background:#F8F8F8; display:flex; align-items:center;
+                justify-content:center;
+            }
+            .avia-body { padding: 10px 12px 12px 12px; }
+            .avia-nome { font-size:13px; font-weight:700; color:#1a2f4a;
+                         line-height:1.3; margin-bottom:3px; }
+            .avia-un   { font-size:11px; color:#9CA3AF; margin-bottom:4px; }
+            .avia-preco{ font-size:16px; font-weight:800; color:#c96ba0; }
+            </style>""", unsafe_allow_html=True)
+
             for cat, items in sorted(by_cat.items()):
-                with st.expander(f"🔸 **{cat.title()}** — {len(items)} item(s)", expanded=True):
+                # Cabeçalho de categoria
+                st.markdown(f"""
+                <div style="display:flex;align-items:center;gap:10px;
+                            margin:24px 0 12px 0;padding-bottom:8px;
+                            border-bottom:2px solid #F0F4FF">
+                  <span style="font-size:14px;font-weight:700;
+                               color:#1a2f4a;text-transform:uppercase;
+                               letter-spacing:.04em">{cat.title()}</span>
+                  <span style="font-size:11px;background:#EFF6FF;color:#1D4ED8;
+                               border-radius:20px;padding:1px 8px">
+                    {len(items)} item(s)
+                  </span>
+                </div>""", unsafe_allow_html=True)
 
-                    # ── Grade visual (imagem + nome + preço + upload) ──────
-                    COLS_PER_ROW = 5
-                    rows_items = [items[i:i+COLS_PER_ROW] for i in range(0, len(items), COLS_PER_ROW)]
-                    for row_items in rows_items:
-                        cols = st.columns(COLS_PER_ROW)
-                        for j, a in enumerate(row_items):
-                            with cols[j]:
-                                # Imagem
-                                if a.get("imagem_b64"):
-                                    try:
-                                        img_bytes = _b64.b64decode(a["imagem_b64"])
-                                        st.image(img_bytes, use_container_width=True)
-                                    except Exception:
-                                        st.markdown("🖼️")
-                                else:
+                # Grade: 3 colunas por linha
+                COLS = 3
+                rows_items = [items[i:i+COLS] for i in range(0, len(items), COLS)]
+                for row_items in rows_items:
+                    cols = st.columns(COLS, gap="medium")
+                    for j, a in enumerate(row_items):
+                        with cols[j]:
+                            # — Card container
+                            preco = float(a["preco"] or 0)
+                            un    = a["unidade"] or "un"
+
+                            # Imagem
+                            if a.get("imagem_b64"):
+                                try:
+                                    img_bytes = _b64.b64decode(a["imagem_b64"])
+                                    st.image(img_bytes, use_container_width=True,
+                                             caption=None)
+                                except Exception:
                                     st.markdown(
-                                        "<div style='height:72px;background:#F3F4F6;border-radius:8px;"
-                                        "display:flex;align-items:center;justify-content:center;"
-                                        "font-size:24px'>📦</div>",
-                                        unsafe_allow_html=True
-                                    )
-                                # Nome e preço
-                                st.caption(f"**{a['nome']}**")
-                                st.caption(f"R${float(a['preco'] or 0):.2f}/{a['unidade'] or 'un'}")
-                                # Upload de imagem
-                                up_img = st.file_uploader(
-                                    "📷", type=["jpg","jpeg","png","webp"],
-                                    key=f"img_up_{a['id']}", label_visibility="collapsed"
+                                        "<div class='avia-img' style='height:120px;"
+                                        "background:#F3F4F6;border-radius:10px;"
+                                        "display:flex;align-items:center;"
+                                        "justify-content:center;font-size:32px'>📦</div>",
+                                        unsafe_allow_html=True)
+                            else:
+                                st.markdown(
+                                    "<div style='height:120px;background:#F8F9FA;"
+                                    "border-radius:10px;display:flex;align-items:center;"
+                                    "justify-content:center;font-size:36px;"
+                                    "border:1.5px dashed #E5E7EB'>📦</div>",
+                                    unsafe_allow_html=True)
+
+                            # Info do produto
+                            st.markdown(f"""
+                            <div style="margin-top:8px">
+                              <div style="font-size:13px;font-weight:700;
+                                          color:#1a2f4a;line-height:1.3">
+                                {a['nome']}
+                              </div>
+                              <div style="font-size:11px;color:#9CA3AF;margin:2px 0">
+                                por {un}
+                              </div>
+                              <div style="font-size:17px;font-weight:800;color:#c96ba0">
+                                R${preco:.2f}
+                              </div>
+                            </div>""", unsafe_allow_html=True)
+
+                            # Upload de imagem (compacto)
+                            up_img = st.file_uploader(
+                                "Trocar foto", type=["jpg","jpeg","png","webp"],
+                                key=f"img_up_{a['id']}", label_visibility="collapsed"
+                            )
+                            if up_img:
+                                b64_str = _b64.b64encode(up_img.read()).decode()
+                                conn.execute(
+                                    "UPDATE acabamentos SET imagem_b64=? WHERE id=?",
+                                    (b64_str, a["id"])
                                 )
-                                if up_img:
-                                    b64_str = _b64.b64encode(up_img.read()).decode()
-                                    conn.execute("UPDATE acabamentos SET imagem_b64=? WHERE id=?",
-                                                 (b64_str, a["id"]))
-                                    conn.commit()
-                                    st.rerun()
+                                conn.commit()
+                                st.rerun()
 
-                    st.divider()
+                st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
-                    # ── Editor de valores (preço, nome, ativo) ─────────────
+                # ── Edição de preços (expander, sem bagunçar a grade) ──────
+                with st.expander(f"Editar preços — {cat.title()}", expanded=False):
                     df_cat = pd.DataFrame([{
                         "ID": a["id"],
                         "Nome": a["nome"],
@@ -3175,15 +3418,17 @@ elif pagina == "⊕ Aviamentos":
                         height=min(40 + 36 * len(df_cat), 2000),
                         disabled=["ID"],
                         column_config={
-                            "Preço R$": st.column_config.NumberColumn(format="R$%.2f", step=0.1),
+                            "Preço R$": st.column_config.NumberColumn(
+                                format="R$%.2f", step=0.1),
                             "Ativo": st.column_config.CheckboxColumn(),
                         },
                         key=f"edit_acab_{cat}"
                     )
-                    if st.button(f"💾 Salvar {cat}", key=f"sv_acab_{cat}"):
+                    if st.button(f"Salvar {cat}", key=f"sv_acab_{cat}", type="primary"):
                         for _, row in edited_a.iterrows():
                             conn.execute(
-                                "UPDATE acabamentos SET nome=?, unidade=?, preco=?, observacoes=?, ativo=? WHERE id=?",
+                                "UPDATE acabamentos SET nome=?, unidade=?, preco=?,"
+                                "observacoes=?, ativo=? WHERE id=?",
                                 (row["Nome"], row["Unidade"], float(row["Preço R$"]),
                                  row["Obs"], 1 if row["Ativo"] else 0, int(row["ID"]))
                             )
