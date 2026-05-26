@@ -786,71 +786,79 @@ if pagina == "◆ Dashboard":
             st.markdown("</div>", unsafe_allow_html=True)
 
         with alert_col:
+            _reat_pct = min(segs['Reativar'] / max(len(ns_customers), 1) * 100, 100)
             st.markdown(f"""
-<div class="wcard" style="height:100%">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-    <div class="wcard-title">Atencao necessaria</div>
-    <span style="background:#FEE2E2;color:#B91C1C;padding:3px 10px;
-                 border-radius:6px;font-size:11px;font-weight:700">{n_urgentes} urgentes</span>
+<div class="wcard" style="height:100%;display:flex;flex-direction:column;gap:0">
+
+  <!-- header -->
+  <div style="display:flex;justify-content:space-between;align-items:center;
+              margin-bottom:20px">
+    <div style="font-size:14px;font-weight:700;color:{NAVY}">Resumo operacional</div>
+    {'<span style="background:#FEE2E2;color:#DC2626;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">'+str(n_urgentes)+' urgentes</span>' if n_urgentes > 0 else ''}
   </div>
 
-  <div style="padding:14px 0;border-bottom:1px solid #F0F2F5">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="width:42px;height:42px;
-                  background:linear-gradient(135deg,#FCE7F3,#f9d0ea);
-                  border-radius:12px;flex-shrink:0;display:flex;
-                  align-items:center;justify-content:center;
-                  font-size:19px;font-weight:800;color:{PINK}">◎</div>
-      <div style="flex:1">
-        <div style="font-size:11px;color:#9CA3AF;font-weight:700;
-                    text-transform:uppercase;letter-spacing:0.07em">Para Reativar</div>
-        <div style="font-size:28px;font-weight:800;color:{NAVY};line-height:1.1;margin-top:2px">{segs['Reativar']}</div>
-        <div style="font-size:11px;color:#9CA3AF">clientes 60-180 dias</div>
+  <!-- Para Reativar -->
+  <div style="padding:14px 0;border-bottom:1px solid #F4F5F7">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;
+                margin-bottom:8px">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#9CA3AF;
+                    letter-spacing:0.04em;margin-bottom:4px">Para Reativar</div>
+        <div style="font-size:32px;font-weight:800;color:{PINK};
+                    line-height:1;letter-spacing:-1px">{segs['Reativar']}</div>
       </div>
-      <span class="chip chip-pink">reativar</span>
-    </div>
-    <div class="pbar-bg" style="margin-top:10px">
-      <div class="pbar-fill" style="width:{min(segs['Reativar']/max(len(ns_customers),1)*100,100):.0f}%;
-                                    background:{PINK}"></div>
-    </div>
-  </div>
-
-  <div style="padding:14px 0;border-bottom:1px solid #F0F2F5">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="width:42px;height:42px;
-                  background:linear-gradient(135deg,#FEF9C3,#fef3a7);
-                  border-radius:12px;flex-shrink:0;display:flex;
-                  align-items:center;justify-content:center;
-                  font-size:19px;font-weight:800;color:#92400E">⊞</div>
-      <div style="flex:1">
-        <div style="font-size:11px;color:#9CA3AF;font-weight:700;
-                    text-transform:uppercase;letter-spacing:0.07em">Em Producao</div>
-        <div style="font-size:28px;font-weight:800;color:{NAVY};line-height:1.1;margin-top:2px">{total_em_prod}</div>
-        <div style="font-size:11px;color:#9CA3AF">{n_urgentes} urgente(s) na fila</div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#9CA3AF">clientes</div>
+        <div style="font-size:11px;color:#9CA3AF">60–180 dias</div>
       </div>
-      <span class="chip chip-yellow">ordens</span>
+    </div>
+    <div style="background:#F0F2F5;border-radius:99px;height:5px">
+      <div style="width:{_reat_pct:.0f}%;background:{PINK};
+                  border-radius:99px;height:5px"></div>
+    </div>
+    <div style="font-size:10px;color:#9CA3AF;margin-top:4px">
+      {_reat_pct:.0f}% da base</div>
+  </div>
+
+  <!-- Em Produção -->
+  <div style="padding:14px 0;border-bottom:1px solid #F4F5F7">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#9CA3AF;
+                    letter-spacing:0.04em;margin-bottom:4px">Em Producao</div>
+        <div style="font-size:32px;font-weight:800;color:{GOLD};
+                    line-height:1;letter-spacing:-1px">{total_em_prod}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#9CA3AF">ordens</div>
+        <div style="font-size:11px;color:{'#DC2626' if n_urgentes>0 else '#9CA3AF'}">
+          {n_urgentes} urgente{'s' if n_urgentes!=1 else ''}</div>
+      </div>
     </div>
   </div>
 
+  <!-- Clientes VIP -->
   <div style="padding:14px 0 0">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="width:42px;height:42px;
-                  background:linear-gradient(135deg,#DCFCE7,#bbf7d0);
-                  border-radius:12px;flex-shrink:0;display:flex;
-                  align-items:center;justify-content:center;
-                  font-size:19px;font-weight:800;color:#15803D">◆</div>
-      <div style="flex:1">
-        <div style="font-size:11px;color:#9CA3AF;font-weight:700;
-                    text-transform:uppercase;letter-spacing:0.07em">Clientes VIP</div>
-        <div style="font-size:28px;font-weight:800;color:{NAVY};line-height:1.1;margin-top:2px">{segs['VIP']}</div>
-        <div style="font-size:11px;color:#9CA3AF">meta: {int(meta_vip)} VIPs</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;
+                margin-bottom:8px">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#9CA3AF;
+                    letter-spacing:0.04em;margin-bottom:4px">Clientes VIP</div>
+        <div style="font-size:32px;font-weight:800;color:#16A34A;
+                    line-height:1;letter-spacing:-1px">{segs['VIP']}</div>
       </div>
-      <span class="chip chip-green">VIP</span>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#9CA3AF">meta</div>
+        <div style="font-size:13px;font-weight:700;color:#16A34A">{int(meta_vip)}</div>
+      </div>
     </div>
-    <div class="pbar-bg" style="margin-top:10px">
-      <div class="pbar-fill" style="width:{prog_vip:.0f}%;background:#10B981"></div>
+    <div style="background:#F0F2F5;border-radius:99px;height:5px">
+      <div style="width:{prog_vip:.0f}%;background:#16A34A;
+                  border-radius:99px;height:5px"></div>
     </div>
+    <div style="font-size:10px;color:#9CA3AF;margin-top:4px">{prog_vip:.0f}% da meta</div>
   </div>
+
 </div>
 """, unsafe_allow_html=True)
 
