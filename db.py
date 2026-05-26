@@ -271,7 +271,7 @@ def init_db():
     _METAS_DEFAULT = [
         ("fat_mensal",      8000.0,  "Meta de faturamento mensal (R$)"),
         ("fat_mensal_prox", 15000.0, "Proxima meta mensal apos bater a atual (R$)"),
-        ("fat_anual",       150000.0,"Meta de faturamento anual (R$)"),
+        ("fat_anual",       100000.0,"Meta de faturamento anual (R$)"),
         ("pedidos_mensal",  60.0,    "Meta de pedidos por mês"),
         ("clientes_vip",    25.0,    "Meta de clientes VIP"),
         ("ticket_medio",    220.0,   "Meta de ticket médio (R$)"),
@@ -281,6 +281,8 @@ def init_db():
                   (_chave, _val, _desc))
     # Migração: atualiza fat_mensal se ainda estiver no valor padrão antigo (15000)
     c.execute("UPDATE metas SET valor=8000 WHERE chave='fat_mensal' AND valor=15000")
+    # Migração: atualiza fat_anual de 150000 para 100000
+    c.execute("UPDATE metas SET valor=100000 WHERE chave='fat_anual' AND valor=150000")
 
     # DRE — migração: colunas extras em dre_custos
     for _col, _default in [
