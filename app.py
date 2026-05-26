@@ -44,9 +44,18 @@ def _brl(s) -> float:
 # ── Setup ─────────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Backbe Central",
-    page_icon="🌟",
+    page_icon="b",
     layout="wide",
     initial_sidebar_state="expanded",
+)
+
+_FAVICON_SVG = """<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+<text y='88' x='8' font-size='96' font-family='Georgia,serif' fill='%2387CEEB'
+  font-style='italic' font-weight='bold'>b</text></svg>"""
+st.markdown(
+    f'<link rel="icon" type="image/svg+xml" '
+    f'href="data:image/svg+xml,{_FAVICON_SVG}">',
+    unsafe_allow_html=True,
 )
 
 NAVY      = "#111827"
@@ -107,6 +116,7 @@ div[data-testid="stSidebarContent"] {{
 section[data-testid="stSidebar"] .stButton,
 div[data-testid="stSidebarContent"] .stButton {{
     margin: 1px 0 !important;
+    width: 100% !important;
 }}
 section[data-testid="stSidebar"] .stButton > button,
 div[data-testid="stSidebarContent"] .stButton > button {{
@@ -118,10 +128,19 @@ div[data-testid="stSidebarContent"] .stButton > button {{
     font-weight: 500 !important;
     text-align: left !important;
     justify-content: flex-start !important;
-    padding: 8px 10px 8px 14px !important;
+    align-items: center !important;
+    padding: 8px 10px 8px 12px !important;
     letter-spacing: -0.01em !important;
     width: 100% !important;
-    transition: all 0.13s ease !important;
+    transition: background 0.13s ease, color 0.13s ease !important;
+}}
+section[data-testid="stSidebar"] .stButton > button > div,
+div[data-testid="stSidebarContent"] .stButton > button > div {{
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    text-align: left !important;
+    width: 100% !important;
 }}
 section[data-testid="stSidebar"] .stButton > button:hover,
 div[data-testid="stSidebarContent"] .stButton > button:hover {{
@@ -135,6 +154,7 @@ div[data-testid="stSidebarContent"] .stButton > button p {{
     font-size: 13px !important;
     font-weight: 500 !important;
     margin: 0 !important;
+    color: inherit !important;
 }}
 /* ── Botão de ação (Atualizar) ─────────────────────────────── */
 section[data-testid="stSidebar"] .stButton > button[data-testid="baseButton-primary"],
@@ -387,24 +407,24 @@ if "pagina" not in st.session_state:
 
 _NAV = [
     ("VISAO GERAL", [
-        ("◆ Dashboard",          "📊", "Dashboard"),
-        ("▷ Calendario",         "📅", "Calendário"),
+        ("◆ Dashboard",          "Dashboard"),
+        ("▷ Calendario",         "Calendário"),
     ]),
     ("LOJA", [
-        ("▦ Produtos",           "👗", "Produtos"),
-        ("◎ CRM — Clientes",     "👥", "CRM — Clientes"),
-        ("↗ Crescimento",        "📈", "Crescimento"),
+        ("▦ Produtos",           "Produtos"),
+        ("◎ CRM — Clientes",     "CRM — Clientes"),
+        ("↗ Crescimento",        "Crescimento"),
     ]),
     ("PRODUCAO", [
-        ("≋ Tecidos",            "🧵", "Tecidos"),
-        ("⊕ Aviamentos",         "🪡", "Aviamentos"),
-        ("⊞ Ordens de Producao", "🏭", "Ordens de Producao"),
-        ("◇ Calculadora CMV",    "🧮", "Calculadora CMV"),
+        ("≋ Tecidos",            "Tecidos"),
+        ("⊕ Aviamentos",         "Aviamentos"),
+        ("⊞ Ordens de Producao", "Ordens de Producao"),
+        ("◇ Calculadora CMV",    "Calculadora CMV"),
     ]),
     ("FINANCEIRO", [
-        ("▣ Financeiro",         "💰", "Financeiro"),
-        ("◉ Relatorio Mae",      "🧾", "Relatorio Mae"),
-        ("⊛ Declaracao MEI",     "📄", "Declaracao MEI"),
+        ("▣ Financeiro",         "Financeiro"),
+        ("◉ Relatorio Mae",      "Relatorio Mae"),
+        ("⊛ Declaracao MEI",     "Declaracao MEI"),
     ]),
 ]
 
@@ -414,12 +434,21 @@ with st.sidebar:
     st.markdown(f"""
 <div style="padding:10px 4px 18px 4px">
   <div style="display:flex;align-items:center;gap:10px">
-    <div style="width:38px;height:38px;
-                background:linear-gradient(135deg,{PINK},{GOLD});
+    <div style="width:38px;height:38px;background:white;
                 border-radius:11px;display:flex;align-items:center;
                 justify-content:center;flex-shrink:0;
-                box-shadow:0 4px 14px rgba(201,107,160,0.28)">
-      <span style="font-size:17px;color:white;font-weight:900">B</span>
+                box-shadow:0 2px 10px rgba(135,206,235,0.35);
+                border:1.5px solid #D6EFFA">
+      <svg width="26" height="26" viewBox="0 0 26 26">
+        <g transform="translate(13,13)">
+          <ellipse cx="0" cy="-6" rx="4.5" ry="7" fill="#87CEEB"/>
+          <ellipse cx="0" cy="-6" rx="4.5" ry="7" fill="#87CEEB" transform="rotate(72)"/>
+          <ellipse cx="0" cy="-6" rx="4.5" ry="7" fill="#87CEEB" transform="rotate(144)"/>
+          <ellipse cx="0" cy="-6" rx="4.5" ry="7" fill="#87CEEB" transform="rotate(216)"/>
+          <ellipse cx="0" cy="-6" rx="4.5" ry="7" fill="#87CEEB" transform="rotate(288)"/>
+          <circle cx="0" cy="0" r="5.5" fill="#87CEEB"/>
+        </g>
+      </svg>
     </div>
     <div>
       <div style="font-size:17px;font-weight:800;color:{NAVY};
@@ -434,14 +463,13 @@ with st.sidebar:
     for _sec, _items in _NAV:
         st.markdown(f'<div class="nav-section-label">{_sec}</div>',
                     unsafe_allow_html=True)
-        for _key, _icon, _label in _items:
+        for _key, _label in _items:
             if st.session_state["pagina"] == _key:
-                st.markdown(f"""<div class="nav-active">
-  <span class="ni">{_icon}</span>
-  <span class="nl">{_label}</span>
-</div>""", unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="nav-active"><span class="nl">{_label}</span></div>',
+                    unsafe_allow_html=True)
             else:
-                if st.button(f"{_icon}  {_label}", key=f"_nav_{_key}",
+                if st.button(_label, key=f"_nav_{_key}",
                              use_container_width=True):
                     st.session_state["pagina"] = _key
                     st.rerun()
