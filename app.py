@@ -2997,8 +2997,15 @@ elif pagina == "⊟ Estoque":
     if _inv_rows:
         _df_inv = pd.DataFrame(_inv_rows)
 
+        # ── Busca por nome ──────────────────────────────────────────────────
+        _busca_nome = st.text_input(
+            "Pesquisar produto",
+            placeholder="Digite o nome do produto...",
+            key="est_busca_nome",
+        )
+
         # ── Filtros ─────────────────────────────────────────────────────────
-        with st.expander("Filtros", expanded=True):
+        with st.expander("Filtros", expanded=False):
             fc1, fc2, fc3, fc4 = st.columns([2, 2, 2, 1])
 
             _all_colors = sorted({r["cor"] for r in _inv_rows if r["cor"]})
@@ -3021,6 +3028,8 @@ elif pagina == "⊟ Estoque":
 
         # Aplica filtros
         _df_f = _df_inv.copy()
+        if _busca_nome:
+            _df_f = _df_f[_df_f["produto"].str.contains(_busca_nome, case=False, na=False)]
         if _filt_cor:
             _df_f = _df_f[_df_f["cor"].isin(_filt_cor)]
         if _filt_tam:
