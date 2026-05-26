@@ -3713,41 +3713,88 @@ elif pagina == "◉ Relatorio Mae":
         ).fetchall())
 
         if itens_r:
-            df_it = pd.DataFrame([{
-                "ID": i["id"],
-                "Produto": i["produto"],
-                "Categoria": i["categoria"] or "",
-                "Qtde": int(i["quantidade"]),
-                "Preço/peça R$": float(i["preco_unitario"]),
-                "Subtotal R$": float(i["subtotal"]),
-            } for i in itens_r])
+            # Cabeçalho da tabela
+            _h0, _h1, _h2, _h3, _h4, _h5 = st.columns([3, 1, 1.4, 1.4, 0.8, 0.8])
+            for _col, _lbl in [
+                (_h0, "Produto"), (_h1, "Qtde"), (_h2, "R$/peça"),
+                (_h3, "Subtotal"), (_h4, ""), (_h5, ""),
+            ]:
+                _col.markdown(
+                    f"<div style='font-size:11px;font-weight:700;color:#6B7280;"
+                    f"text-transform:uppercase;padding:4px 0'>{_lbl}</div>",
+                    unsafe_allow_html=True,
+                )
 
-            edited_it = st.data_editor(
-                df_it,
-                use_container_width=True,
-                hide_index=True,
-                height=min(40 + 36 * len(df_it), 2000),
-                disabled=["ID", "Subtotal R$"],
-                column_config={
-                    "Preço/peça R$": st.column_config.NumberColumn(format="R$%.2f", step=0.5),
-                    "Subtotal R$":   st.column_config.NumberColumn(format="R$%.2f"),
-                    "Qtde":          st.column_config.NumberColumn(step=1, min_value=1),
-                },
-                key="edit_itens_mae_r"
-            )
-            c_sv, c_del = st.columns(2)
-            if c_sv.button("💾 Salvar alterações", key="sv_itens_mae"):
-                for _, row in edited_it.iterrows():
-                    sub = int(row["Qtde"]) * float(row["Preço/peça R$"])
-                    conn.execute(
-                        "UPDATE relatorio_mae_itens SET produto=?, categoria=?, quantidade=?, preco_unitario=?, subtotal=? WHERE id=?",
-                        (row["Produto"], row["Categoria"], int(row["Qtde"]),
-                         float(row["Preço/peça R$"]), sub, int(row["ID"]))
+            for _it in itens_r:
+                _iid = _it["id"]
+                _edit_key = f"edit_row_{_iid}"
+
+                # Linha normal ou em modo edição
+                if st.session_state.get(_edit_key):
+                    # ── Modo edição ───────────────────────────────────────
+                    _e0, _e1, _e2, _e3, _e4, _e5 = st.columns([3, 1, 1.4, 1.4, 0.8, 0.8])
+                    _new_nome  = _e0.text_input("", value=_it["produto"], key=f"en_{_iid}", label_visibility="collapsed")
+                    _new_qtde  = _e1.number_input("", value=int(_it["quantidade"]), min_value=1, step=1, key=f"eq_{_iid}", label_visibility="collapsed")
+                    _new_preco = _e2.number_input("", value=float(_it["preco_unitario"]), min_value=0.0, step=0.5, key=f"ep_{_iid}", label_visibility="collapsed")
+                    _e3.markdown(
+                        f"<div style='padding:6px 0;font-size:13px;color:#6B7280'>"
+                        f"R${_new_qtde * _new_preco:.2f}</div>",
+                        unsafe_allow_html=True,
                     )
-                _recalc_relatorio(conn, rel_id)
-                conn.commit()
-                st.success("✅ Peças salvas!")
-                st.rerun()
+                    if _e4.button("Salvar", key=f"esv_{_iid}", type="primary", use_container_width=True):
+                        _new_sub = _new_qtde * _new_preco
+                        conn.execute(
+                            "UPDATE relatorio_mae_itens "
+                            "SET produto=?, quantidade=?, preco_unitario=?, subtotal=? WHERE id=?",
+                            (_new_nome, _new_qtde, _new_preco, _new_sub, _iid),
+                        )
+                        _recalc_relatorio(conn, rel_id)
+                        conn.commit()
+                        del st.session_state[_edit_key]
+                        st.rerun()
+                    if _e5.button("✕", key=f"ecan_{_iid}", use_container_width=True):
+                        del st.session_state[_edit_key]
+                        st.rerun()
+                else:
+                    # ── Linha de visualização ─────────────────────────────
+                    _r0, _r1, _r2, _r3, _r4, _r5 = st.columns([3, 1, 1.4, 1.4, 0.8, 0.8])
+                    _r0.markdown(
+                        f"<div style='padding:6px 0;font-weight:600;color:#1a2f4a'>{_it['produto']}</div>",
+                        unsafe_allow_html=True,
+                    )
+                    _r1.markdown(
+                        f"<div style='padding:6px 0;color:#374151'>{_it['quantidade']}</div>",
+                        unsafe_allow_html=True,
+                    )
+                    _r2.markdown(
+                        f"<div style='padding:6px 0;color:#374151'>R${float(_it['preco_unitario']):.2f}</div>",
+                        unsafe_allow_html=True,
+                    )
+                    _r3.markdown(
+                        f"<div style='padding:6px 0;font-weight:700;color:#059669'>R${float(_it['subtotal']):.2f}</div>",
+                        unsafe_allow_html=True,
+                    )
+                    if _r4.button("Editar", key=f"edt_{_iid}", use_container_width=True):
+                        st.session_state[_edit_key] = True
+                        st.rerun()
+                    if _r5.button("Excluir", key=f"del_{_iid}", use_container_width=True):
+                        conn.execute("DELETE FROM relatorio_mae_itens WHERE id=?", (_iid,))
+                        _recalc_relatorio(conn, rel_id)
+                        conn.commit()
+                        st.rerun()
+
+                st.markdown(
+                    "<div style='height:1px;background:#F3F4F6;margin:2px 0'></div>",
+                    unsafe_allow_html=True,
+                )
+
+            # Total
+            _total_it = sum(float(i["subtotal"]) for i in itens_r)
+            st.markdown(
+                f"<div style='text-align:right;font-weight:800;font-size:15px;"
+                f"color:#1a2f4a;padding:8px 0'>Total: R${_total_it:.2f}</div>",
+                unsafe_allow_html=True,
+            )
 
         st.divider()
         st.subheader("➕ Adicionar peças")
