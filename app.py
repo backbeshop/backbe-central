@@ -650,7 +650,7 @@ if pagina == "◆ Dashboard":
 
         with k1:
             st.markdown(f"""
-<div class="kcard" style="background:#FDF2F8;border-color:#F9D2E9">
+<div class="kcard" style="background:#FFF0F6;border-color:#FFADD0">
   <div class="kcard-label" style="color:{PINK}">Faturamento — {MESES_NOME_D[mes_at-1]}</div>
   <div class="kcard-val">R${rev_atual/1000:.1f}k</div>
   <div class="kcard-sub">Meta R${meta_fat/1000:.0f}k</div>
@@ -660,7 +660,7 @@ if pagina == "◆ Dashboard":
 
         with k2:
             st.markdown(f"""
-<div class="kcard" style="background:#EFF6FF;border-color:#BFDBFE">
+<div class="kcard" style="background:#EFF6FF;border-color:#93C5FD">
   <div class="kcard-label" style="color:#2563EB">Pedidos — {MESES_NOME_D[mes_at-1]}</div>
   <div class="kcard-val">{ped_atual}</div>
   <div class="kcard-sub">Meta: {int(meta_ped)} pedidos</div>
@@ -673,7 +673,7 @@ if pagina == "◆ Dashboard":
 
         with k3:
             st.markdown(f"""
-<div class="kcard" style="background:#FEFCE8;border-color:#FEF08A">
+<div class="kcard" style="background:#FFFBEB;border-color:#FCD34D">
   <div class="kcard-label" style="color:#92400E">Clientes VIP</div>
   <div class="kcard-val">{segs['VIP']}</div>
   <div class="kcard-sub">Meta: {int(meta_vip)} VIPs</div>
@@ -683,12 +683,12 @@ if pagina == "◆ Dashboard":
 
         with k4:
             st.markdown(f"""
-<div class="kcard" style="background:#F0FDFA;border-color:#99F6E4">
-  <div class="kcard-label" style="color:#0F766E">Ticket Medio</div>
+<div class="kcard" style="background:#F5F3FF;border-color:#DDD6FE">
+  <div class="kcard-label" style="color:#7C3AED">Ticket Medio</div>
   <div class="kcard-val">R${ticket_medio:.0f}</div>
   <div class="kcard-sub">Meta: R${meta_ticket:.0f}</div>
-  {_pbar_goal(f"R${ticket_medio:.0f} de R${meta_ticket:.0f}", prog_ticket, "#0F766E")}
-  <div class="kcard-delta" style="background:#CCFBF1;color:#0F766E">{len(ns_customers)} clientes</div>
+  {_pbar_goal(f"R${ticket_medio:.0f} de R${meta_ticket:.0f}", prog_ticket, "#7C3AED")}
+  <div class="kcard-delta" style="background:#EDE9FE;color:#6D28D9">{len(ns_customers)} clientes</div>
 </div>""", unsafe_allow_html=True)
 
         st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
@@ -885,7 +885,7 @@ if pagina == "◆ Dashboard":
                 ("fat_mensal",     "Faturamento",  f"R${meta_fat:,.0f}",  prog_fat,    PINK),
                 ("pedidos_mensal", "Pedidos",       str(int(meta_ped)),     prog_ped,    "#2563EB"),
                 ("clientes_vip",   "VIP alvo",      str(int(meta_vip)),     prog_vip,    GOLD),
-                ("ticket_medio",   "Ticket medio",  f"R${meta_ticket:.0f}", prog_ticket, "#0F766E"),
+                ("ticket_medio",   "Ticket medio",  f"R${meta_ticket:.0f}", prog_ticket, "#7C3AED"),
             ]
             for chave, lbl, val_str, prog, cor in _meta_cfg:
                 st.markdown(f"""
@@ -933,7 +933,7 @@ if pagina == "◆ Dashboard":
 
         with a1:
             st.markdown(f"""
-<div class="kcard" style="background:#FDF2F8;border-color:#F9D2E9">
+<div class="kcard" style="background:#FFF0F6;border-color:#FFADD0">
   <div class="kcard-label" style="color:{PINK}">Faturamento — {ANO_DASH}</div>
   <div class="kcard-val">R${fat_ano/1000:.1f}k</div>
   <div class="kcard-sub">{len([m for m in rev_2026 if rev_2026[m]>0])} meses com receita</div>
@@ -942,7 +942,7 @@ if pagina == "◆ Dashboard":
 
         with a2:
             st.markdown(f"""
-<div class="kcard" style="background:#EFF6FF;border-color:#BFDBFE">
+<div class="kcard" style="background:#EFF6FF;border-color:#93C5FD">
   <div class="kcard-label" style="color:#2563EB">Pedidos — {ANO_DASH}</div>
   <div class="kcard-val">{ped_ano}</div>
   <div class="kcard-sub">media de {ped_ano/meses_c_dados:.0f} por mes</div>
@@ -952,15 +952,15 @@ if pagina == "◆ Dashboard":
 
         with a3:
             st.markdown(f"""
-<div class="kcard" style="background:#F0FDFA;border-color:#99F6E4">
-  <div class="kcard-label" style="color:#0F766E">Ticket Medio — {ANO_DASH}</div>
+<div class="kcard" style="background:#F5F3FF;border-color:#DDD6FE">
+  <div class="kcard-label" style="color:#7C3AED">Ticket Medio — {ANO_DASH}</div>
   <div class="kcard-val">R${ticket_ano:.0f}</div>
   <div class="kcard-sub">baseado em pedidos do ano</div>
 </div>""", unsafe_allow_html=True)
 
         with a4:
             st.markdown(f"""
-<div class="kcard" style="background:#FEFCE8;border-color:#FEF08A">
+<div class="kcard" style="background:#FFFBEB;border-color:#FCD34D">
   <div class="kcard-label" style="color:#92400E">Clientes na Base</div>
   <div class="kcard-val">{len(ns_customers)}</div>
   <div class="kcard-sub">{segs['VIP']} VIP · {segs['Ativo']} ativos</div>
