@@ -107,6 +107,81 @@ def compute_sales(orders):
     )
     return prod_list, dict(monthly)
 
+@st.cache_data(ttl=1800, show_spinner=False)
+def fetch_all_products():
+    """Busca todos os produtos com variantes da Nuvemshop."""
+    all_products = []
+    page = 1
+    while True:
+        try:
+            batch = _get("products", {"per_page": 200, "page": page})
+        except Exception:
+            break
+        if not batch:
+            break
+        all_products.extend(batch)
+        if len(batch) < 200:
+            break
+        page += 1
+    return all_products
+
+
+_SIZE_RE = re.compile(
+    r"^(PP|P|M|G|GG|XG|XGG|34|36|38|40|42|44|46|48|Único|Unico|Única|OS|RN|NB)$",
+    re.IGNORECASE,
+)
+
+def parse_inventory(products):
+    """
+    Converte lista de produtos NS em linhas de variante.
+    Retorna lista de dicts: produto, cor, tamanho, estoque, preco, valor_total
+    """
+    rows = []
+    for p in products:
+        name = _name(p.get("name", ""))
+        try:
+            base_price = float(str(p.get("price", 0) or 0).replace(",", "."))
+        except Exception:
+            base_price = 0.0
+        variants = p.get("variants") or []
+
+        if variants:
+            for v in variants:
+                values = v.get("values") or []
+                color, size = "", ""
+                for val in values:
+                    val_str = (_name(val) if isinstance(val, dict) else str(val)).strip()
+                    if _SIZE_RE.match(val_str):
+                        size = val_str
+                    else:
+                        color = val_str
+                stock = int(v.get("stock") or 0)
+                try:
+                    price = float(str(v.get("price") or base_price or 0).replace(",", "."))
+                except Exception:
+                    price = base_price
+                rows.append({
+                    "produto": name,
+                    "cor": color,
+                    "tamanho": size,
+                    "estoque": stock,
+                    "preco": price,
+                    "valor_total": round(stock * price, 2),
+                })
+        else:
+            stock = int(p.get("stock") or 0)
+            rows.append({
+                "produto": name,
+                "cor": "",
+                "tamanho": "",
+                "estoque": stock,
+                "preco": base_price,
+                "valor_total": round(stock * base_price, 2),
+            })
+
+    return sorted(rows, key=lambda x: -x["estoque"])
+
+
 def compute_customers(orders):
     cust = defaultdict(lambda: {"name": "", "email": "", "pedidos": 0,
                                  "gasto": 0.0, "primeiro": "", "ultimo": ""})

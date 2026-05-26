@@ -8,7 +8,8 @@ import sqlite3, math, json
 from pathlib import Path
 
 from db import init_db, get_conn, rows_to_list, row_to_dict
-from api_ns import fetch_all_orders, fetch_all_customers, compute_sales, compute_customers
+from api_ns import (fetch_all_orders, fetch_all_customers, compute_sales,
+                    compute_customers, fetch_all_products, parse_inventory)
 from nubank_parser import parse_nubank_pdf
 from notion_api import get_week_content, notion_ok, PLATAFORMA_ICON
 from ics_export import build_ics, gcal_link
@@ -413,6 +414,7 @@ _NAV = [
     ("LOJA", [
         ("▦ Produtos",           "Produtos"),
         ("◎ CRM — Clientes",     "CRM — Clientes"),
+        ("⊟ Estoque",            "Estoque"),
     ]),
     ("PRODUCAO", [
         ("≋ Tecidos",            "Tecidos"),
@@ -2909,6 +2911,209 @@ elif pagina == "⊛ Declaracao MEI":
     conn.close()
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  PÁGINA — ESTOQUE
+# ══════════════════════════════════════════════════════════════════════════════
+elif pagina == "⊟ Estoque":
+    st.title("Estoque")
+
+    conn = get_conn()
+
+    with st.spinner("Carregando estoque da Nuvemshop..."):
+        try:
+            _ns_prods = fetch_all_products()
+            _inv_rows = parse_inventory(_ns_prods)
+            _ns_ok = True
+        except Exception as _e_inv:
+            _inv_rows = []
+            _ns_ok = False
+            st.error(f"Erro ao conectar com Nuvemshop: {_e_inv}")
+
+    # ── Dados de produção local ─────────────────────────────────────────────
+    _em_prod_row = conn.execute(
+        "SELECT SUM(custo_total) as total FROM ordens_producao WHERE status != 'pronto'"
+    ).fetchone()
+    _valor_producao = float(_em_prod_row["total"] or 0)
+
+    _ordens_abertas = rows_to_list(conn.execute(
+        "SELECT produto, quantidade, status, custo_total FROM ordens_producao "
+        "WHERE status != 'pronto' ORDER BY status"
+    ).fetchall())
+
+    # ── KPIs principais ────────────────────────────────────────────────────
+    _total_pecas   = sum(r["estoque"] for r in _inv_rows)
+    _valor_inv     = sum(r["valor_total"] for r in _inv_rows)
+    _skus_com_est  = sum(1 for r in _inv_rows if r["estoque"] > 0)
+    _lucro_est     = _valor_inv * 0.38   # margem líquida estimada 38%
+
+    k1, k2, k3, k4, k5 = st.columns(5)
+    _kpi_style = (
+        "background:white;border-radius:12px;padding:14px 16px;"
+        "border:1.5px solid #F0F0F0;box-shadow:0 2px 8px rgba(0,0,0,.05)"
+    )
+    for col, label, value, color in [
+        (k1, "SKUs em estoque",    f"{_skus_com_est}",       "#1a2f4a"),
+        (k2, "Peças em estoque",   f"{_total_pecas:,}",      "#1a2f4a"),
+        (k3, "Valor inventário",   f"R${_valor_inv:,.0f}",   "#c96ba0"),
+        (k4, "Lucro estimado",     f"R${_lucro_est:,.0f}",   "#059669"),
+        (k5, "Em produção",        f"R${_valor_producao:,.0f}", "#b8860b"),
+    ]:
+        col.markdown(f"""
+        <div style="{_kpi_style}">
+          <div style="font-size:11px;font-weight:600;color:#9CA3AF;
+                      text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">
+            {label}
+          </div>
+          <div style="font-size:22px;font-weight:800;color:{color}">{value}</div>
+        </div>""", unsafe_allow_html=True)
+
+    st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+
+    if _inv_rows:
+        _df_inv = pd.DataFrame(_inv_rows)
+
+        # ── Filtros ─────────────────────────────────────────────────────────
+        with st.expander("Filtros", expanded=True):
+            fc1, fc2, fc3, fc4 = st.columns([2, 2, 2, 1])
+
+            _all_colors = sorted({r["cor"] for r in _inv_rows if r["cor"]})
+            _all_sizes  = sorted(
+                {r["tamanho"] for r in _inv_rows if r["tamanho"]},
+                key=lambda s: ["PP","P","M","G","GG","XG","XGG"].index(s)
+                if s in ["PP","P","M","G","GG","XG","XGG"] else 99
+            )
+
+            _filt_cor   = fc1.multiselect("Cor", _all_colors, default=[])
+            _filt_tam   = fc2.multiselect("Tamanho", _all_sizes, default=[])
+            _ord_opts   = {
+                "Maior estoque": ("estoque", False),
+                "Menor estoque": ("estoque", True),
+                "Maior valor":   ("valor_total", False),
+                "A-Z produto":   ("produto", True),
+            }
+            _ord_sel    = fc3.selectbox("Ordenar por", list(_ord_opts.keys()))
+            _so_estoque = fc4.checkbox("Só com estoque", value=True)
+
+        # Aplica filtros
+        _df_f = _df_inv.copy()
+        if _filt_cor:
+            _df_f = _df_f[_df_f["cor"].isin(_filt_cor)]
+        if _filt_tam:
+            _df_f = _df_f[_df_f["tamanho"].isin(_filt_tam)]
+        if _so_estoque:
+            _df_f = _df_f[_df_f["estoque"] > 0]
+
+        _col_sort, _asc = _ord_opts[_ord_sel]
+        _df_f = _df_f.sort_values(_col_sort, ascending=_asc)
+
+        # Renomeia colunas para exibição
+        _df_show = _df_f.rename(columns={
+            "produto": "Produto",
+            "cor": "Cor",
+            "tamanho": "Tamanho",
+            "estoque": "Qtde",
+            "preco": "Preço R$",
+            "valor_total": "Valor Total R$",
+        })[["Produto", "Cor", "Tamanho", "Qtde", "Preço R$", "Valor Total R$"]]
+
+        st.markdown(
+            f"<div style='font-size:13px;color:#6B7280;margin-bottom:8px'>"
+            f"{len(_df_show)} variante(s) exibida(s)</div>",
+            unsafe_allow_html=True
+        )
+
+        # Highlight de baixo estoque
+        def _highlight_estoque(row):
+            if row["Qtde"] == 0:
+                return ["background:#FEF2F2"] * len(row)
+            if row["Qtde"] <= 3:
+                return ["background:#FFFBEB"] * len(row)
+            return [""] * len(row)
+
+        st.dataframe(
+            _df_show.style.apply(_highlight_estoque, axis=1).format({
+                "Preço R$":      "R${:.2f}",
+                "Valor Total R$": "R${:.2f}",
+            }),
+            use_container_width=True,
+            hide_index=True,
+            height=min(50 + 35 * len(_df_show), 600),
+        )
+        st.caption("🔴 Sem estoque · 🟡 Estoque ≤ 3 · Verde = OK")
+
+        # ── Resumo por produto ──────────────────────────────────────────────
+        st.markdown("---")
+        st.markdown("#### Resumo por produto")
+        _df_by_prod = (
+            _df_inv[_df_inv["estoque"] > 0]
+            .groupby("produto")
+            .agg(total_pecas=("estoque", "sum"), valor_total=("valor_total", "sum"))
+            .reset_index()
+            .sort_values("total_pecas", ascending=False)
+        )
+        _df_by_prod.columns = ["Produto", "Total Peças", "Valor Total R$"]
+        st.dataframe(
+            _df_by_prod.style.format({"Valor Total R$": "R${:.2f}"}),
+            use_container_width=True, hide_index=True,
+            height=min(50 + 35 * len(_df_by_prod), 400)
+        )
+
+    # ── Em Produção ─────────────────────────────────────────────────────────
+    if _ordens_abertas:
+        st.markdown("---")
+        st.markdown("#### Em produção (ordens abertas)")
+        _STATUS_LABELS = {
+            "modelagem": "Modelagem", "corte": "Corte",
+            "costura": "Costura", "acabamento": "Acabamento",
+        }
+        for _op in _ordens_abertas:
+            _op_st = _STATUS_LABELS.get(_op["status"], _op["status"])
+            _op_custo = float(_op["custo_total"] or 0)
+            st.markdown(
+                f"<div style='display:flex;justify-content:space-between;"
+                f"padding:8px 14px;background:white;border-radius:8px;"
+                f"margin-bottom:6px;border:1.5px solid #F0F0F0'>"
+                f"<span style='font-weight:600;color:#1a2f4a'>{_op['produto']}</span>"
+                f"<span style='color:#6B7280'>{_op['quantidade']} peças · {_op_st}</span>"
+                f"<span style='font-weight:700;color:#b8860b'>R${_op_custo:.2f}</span>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+
+    # ── Mais acessados da semana ─────────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("#### Mais vendidos esta semana")
+    try:
+        _all_orders_est = fetch_all_orders()
+        _7d_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+        _recent_ord = [o for o in _all_orders_est if o["created_at"][:10] >= _7d_ago]
+        if _recent_ord:
+            _top_week, _ = compute_sales(_recent_ord)
+            _top_week = [p for p in _top_week if p["units"] > 0][:10]
+            if _top_week:
+                for _i, _p in enumerate(_top_week, 1):
+                    _medal = "🥇" if _i == 1 else ("🥈" if _i == 2 else ("🥉" if _i == 3 else f"{_i}."))
+                    _rev = f"R${_p['revenue']:,.0f}"
+                    st.markdown(
+                        f"<div style='display:flex;align-items:center;gap:12px;"
+                        f"padding:8px 14px;background:white;border-radius:8px;"
+                        f"margin-bottom:6px;border:1.5px solid #F0F0F0'>"
+                        f"<span style='font-size:18px;min-width:28px'>{_medal}</span>"
+                        f"<span style='font-weight:600;color:#1a2f4a;flex:1'>{_p['produto']}</span>"
+                        f"<span style='color:#6B7280'>{_p['units']} unidades</span>"
+                        f"<span style='font-weight:700;color:#c96ba0;min-width:70px;text-align:right'>{_rev}</span>"
+                        f"</div>",
+                        unsafe_allow_html=True
+                    )
+            else:
+                st.info("Nenhuma venda nos últimos 7 dias.")
+        else:
+            st.info("Nenhuma venda nos últimos 7 dias.")
+    except Exception as _e_week:
+        st.warning(f"Não foi possível carregar vendas da semana: {_e_week}")
+
+    conn.close()
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA — PRODUTOS
 # ══════════════════════════════════════════════════════════════════════════════
 elif pagina == "▦ Produtos":
@@ -3546,27 +3751,67 @@ elif pagina == "◉ Relatorio Mae":
 
         st.divider()
         st.subheader("➕ Adicionar peças")
-        with st.form("form_add_peca_mae"):
-            f1, f2 = st.columns(2)
-            prod_r    = f1.text_input("Produto", placeholder="Ex: Calça Itália")
-            cat_r     = f2.selectbox("Categoria de costura", list(cat_opts_r.keys()))
-            f3, f4    = st.columns(2)
-            qtde_r    = f3.number_input("Quantidade de peças", min_value=1, value=10, step=1)
-            preco_def = cat_opts_r[cat_r]["preco_mae"] if cat_r in cat_opts_r else 0.0
-            preco_r   = f4.number_input("Preço/peça R$ (mãe)", min_value=0.0,
-                                        value=float(preco_def), step=0.5)
-            if st.form_submit_button("➕ Adicionar", type="primary"):
-                if prod_r:
-                    sub_r = int(qtde_r) * float(preco_r)
-                    conn.execute("""
-                        INSERT INTO relatorio_mae_itens
-                        (relatorio_id, produto, categoria, quantidade, preco_unitario, subtotal)
-                        VALUES (?,?,?,?,?,?)
-                    """, (rel_id, prod_r, cat_r, int(qtde_r), float(preco_r), sub_r))
-                    _recalc_relatorio(conn, rel_id)
-                    conn.commit()
-                    st.success(f"✅ {int(qtde_r)}× {prod_r} — R${sub_r:.2f}")
-                    st.rerun()
+
+        # ── Catálogo de produtos para autocomplete ─────────────────────────
+        _catalogo_mae = rows_to_list(conn.execute(
+            "SELECT nome, custo_costura FROM produtos_backbe WHERE ativo=1 ORDER BY nome"
+        ).fetchall())
+        _cat_mae_map = {p["nome"]: float(p["custo_costura"] or 0) for p in _catalogo_mae}
+        _cat_mae_opts = ["(digitar nome)"] + list(_cat_mae_map.keys())
+
+        # Selectbox com busca (Streamlit filtra ao digitar)
+        _prod_sel_mae = st.selectbox(
+            "Produto",
+            _cat_mae_opts,
+            key="mae_prod_sel",
+            help="Digite para filtrar produtos do catálogo"
+        )
+
+        _prod_nome_mae = ""
+        _preco_def_mae = 0.0
+
+        if _prod_sel_mae == "(digitar nome)":
+            _prod_nome_mae = st.text_input(
+                "Nome do produto*", placeholder="Ex: Calça Itália",
+                key="mae_prod_custom"
+            )
+            # Se digitou, tenta achar no catálogo para pré-preencher preço
+            if _prod_nome_mae and _prod_nome_mae in _cat_mae_map:
+                _preco_def_mae = _cat_mae_map[_prod_nome_mae]
+        else:
+            _prod_nome_mae = _prod_sel_mae
+            _preco_def_mae = _cat_mae_map.get(_prod_sel_mae, 0.0)
+
+        f3, f4 = st.columns(2)
+        _qtde_mae = f3.number_input(
+            "Quantidade de peças", min_value=1, value=10, step=1, key="mae_qtde_r"
+        )
+        # Chave muda com o produto para forçar reset do valor ao trocar produto
+        _preco_mae = f4.number_input(
+            "Preço/peça R$ (mãe)",
+            min_value=0.0,
+            value=_preco_def_mae,
+            step=0.5,
+            key=f"mae_preco_{_prod_sel_mae}",
+        )
+
+        if _preco_def_mae > 0:
+            f4.caption(f"Auto-preenchido do catálogo")
+
+        if st.button("➕ Adicionar", type="primary", key="mae_add_btn"):
+            if _prod_nome_mae:
+                _sub_mae = int(_qtde_mae) * float(_preco_mae)
+                conn.execute("""
+                    INSERT INTO relatorio_mae_itens
+                    (relatorio_id, produto, categoria, quantidade, preco_unitario, subtotal)
+                    VALUES (?,?,?,?,?,?)
+                """, (rel_id, _prod_nome_mae, "", int(_qtde_mae), float(_preco_mae), _sub_mae))
+                _recalc_relatorio(conn, rel_id)
+                conn.commit()
+                st.success(f"✅ {int(_qtde_mae)}× {_prod_nome_mae} — R${_sub_mae:.2f}")
+                st.rerun()
+            else:
+                st.warning("Informe o nome do produto.")
 
     with tab_resumo_r:
         rel = row_to_dict(conn.execute(
