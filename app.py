@@ -324,66 +324,43 @@ hr {{ border-color:#E8EAF0 !important; }}
     box-shadow: 0 0 0 3px rgba(201,107,160,0.15) !important;
 }}
 
-/* ── Responsive — Tablet (≤ 960px) ─────────────────────────── */
-@media (max-width: 960px) {{
-  /* Colunas em grade 2×2 */
+/* ── Responsive — Tela estreita (≤ 780px) ──────────────────── */
+@media (max-width: 780px) {{
+  /* Empilha TUDO em coluna única — sem sobreposição */
   [data-testid="stHorizontalBlock"] {{
-    flex-wrap: wrap !important;
-    gap: 10px !important;
-  }}
-  [data-testid="stColumn"] {{
-    flex: 0 0 calc(50% - 6px) !important;
-    width: calc(50% - 6px) !important;
-    min-width: calc(50% - 6px) !important;
-    max-width: calc(50% - 6px) !important;
-    box-sizing: border-box !important;
-  }}
-  .main .block-container {{ padding: 1rem 1rem 2.5rem !important; max-width: 100% !important; }}
-  .kcard {{ padding: 16px 18px 14px; }}
-  .kcard-val {{ font-size: 28px !important; }}
-  .wcard {{ padding: 18px 18px; }}
-  .kpi-value {{ font-size: 28px !important; }}
-  /* Header empilha quando estreita */
-  [data-testid="stMarkdownContainer"] > div[style*="justify-content:space-between"] {{
     flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 10px !important;
+    gap: 12px !important;
   }}
-}}
-
-/* ── Responsive — Mobile (≤ 600px) ─────────────────────────── */
-@media (max-width: 600px) {{
-  /* Coluna única */
   [data-testid="stColumn"] {{
-    flex: 0 0 100% !important;
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
+    flex: 0 0 100% !important;
   }}
-  .main .block-container {{ padding: 0.5rem 0.5rem 2rem !important; }}
+  .main .block-container {{ padding: 0.8rem 0.8rem 2rem !important; max-width: 100% !important; }}
+  /* Cards compactos em largura total */
   .kcard {{
-    padding: 14px 16px 12px !important;
-    min-height: 96px !important;
+    padding: 14px 18px 13px !important;
+    min-height: 0 !important;
     border-radius: 16px !important;
   }}
-  .kcard-val {{ font-size: 24px !important; letter-spacing: -1px !important; }}
-  .kcard-label {{ font-size: 10px !important; }}
-  .kcard-sub {{ font-size: 11px !important; margin-top: 6px !important; }}
-  .kcard-delta {{ font-size: 10px !important; padding: 2px 8px !important; }}
-  .wcard {{ padding: 14px 14px !important; border-radius: 16px !important; }}
-  .wcard-title {{ font-size: 13px !important; }}
-  .kpi-value {{ font-size: 24px !important; }}
+  .kcard-val {{ font-size: 26px !important; letter-spacing: -1px !important; }}
+  .kcard-label {{ font-size: 10.5px !important; }}
+  .kcard-sub {{ font-size: 11.5px !important; margin-top: 6px !important; }}
+  .kcard-delta {{ font-size: 10.5px !important; padding: 2px 8px !important; }}
+  .wcard {{ padding: 16px 16px !important; border-radius: 16px !important; }}
+  .wcard-title {{ font-size: 13.5px !important; }}
+  .kpi-value {{ font-size: 26px !important; }}
   /* Tabs compactas */
   .stTabs [data-baseweb="tab"] {{
-    font-size: 11px !important;
-    padding: 6px 10px !important;
+    font-size: 12px !important;
+    padding: 6px 12px !important;
   }}
-  /* Títulos menores */
-  h1 {{ font-size: 18px !important; }}
-  /* Goal bar label menor */
-  .goal-bar-header {{ font-size: 10px !important; }}
-  /* Métricas */
-  [data-testid="stMetricValue"] {{ font-size: 22px !important; }}
+  /* Goal bar */
+  .goal-bar-header {{ font-size: 10.5px !important; }}
+  /* Métricas nativas */
+  [data-testid="stMetricValue"] {{ font-size: 24px !important; }}
+  h1 {{ font-size: 20px !important; }}
 }}
 </style>
 """, unsafe_allow_html=True)
