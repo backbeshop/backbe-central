@@ -361,6 +361,16 @@ hr {{ border-color:#E8EAF0 !important; }}
     box-shadow: 0 0 0 3px rgba(201,107,160,0.15) !important;
 }}
 
+/* ── Números nunca quebram linha ─────────────────────────────── */
+[data-testid="stMarkdownContainer"] div[style*="font-weight:800"],
+[data-testid="stMarkdownContainer"] div[style*="font-weight:900"],
+[data-testid="stMarkdownContainer"] div[style*="font-weight: 800"],
+[data-testid="stMarkdownContainer"] div[style*="font-weight: 900"] {{
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}}
+
 /* ── Responsive — Tela estreita (≤ 780px) ──────────────────── */
 @media (max-width: 780px) {{
   /* Empilha TUDO em coluna única — sem sobreposição */
@@ -2940,30 +2950,46 @@ elif pagina == "⊟ Estoque":
     ).fetchall())
 
     # ── KPIs principais ────────────────────────────────────────────────────
-    _total_pecas   = sum(r["estoque"] for r in _inv_rows)
-    _valor_inv     = sum(r["valor_total"] for r in _inv_rows)
-    _skus_com_est  = sum(1 for r in _inv_rows if r["estoque"] > 0)
-    _lucro_est     = _valor_inv * 0.38   # margem líquida estimada 38%
+    _total_pecas  = sum(r["estoque"] for r in _inv_rows)
+    _valor_inv    = sum(r["valor_total"] for r in _inv_rows)
+    _skus_com_est = sum(1 for r in _inv_rows if r["estoque"] > 0)
+    _lucro_est    = _valor_inv * 0.38
 
-    k1, k2, k3, k4, k5 = st.columns(5)
-    _kpi_style = (
-        "background:white;border-radius:12px;padding:14px 16px;"
-        "border:1.5px solid #F0F0F0;box-shadow:0 2px 8px rgba(0,0,0,.05)"
+    def _fmt_brl(v):
+        """Formata valor em reais sem vírgula que quebra linha (usa ponto)."""
+        if v >= 1_000_000:
+            return f"R$ {v/1_000_000:.1f}M"
+        if v >= 1_000:
+            return f"R$ {v/1_000:.1f}k"
+        return f"R$ {v:.0f}"
+
+    # Grid 3 + 2 igual ao dashboard principal — sem 5 colunas estreitas
+    _kcard = (
+        "background:white;border-radius:14px;padding:16px 18px;"
+        "border:1.5px solid #F0F0F0;box-shadow:0 2px 10px rgba(0,0,0,.05);"
+        "min-width:0;overflow:hidden"
     )
-    for col, label, value, color in [
-        (k1, "SKUs em estoque",    f"{_skus_com_est}",       "#1a2f4a"),
-        (k2, "Peças em estoque",   f"{_total_pecas:,}",      "#1a2f4a"),
-        (k3, "Valor inventário",   f"R${_valor_inv:,.0f}",   "#c96ba0"),
-        (k4, "Lucro estimado",     f"R${_lucro_est:,.0f}",   "#059669"),
-        (k5, "Em produção",        f"R${_valor_producao:,.0f}", "#b8860b"),
+
+    _ka, _kb, _kc = st.columns(3, gap="medium")
+    _kd, _ke     = st.columns(2, gap="medium")
+
+    for _col, _lbl, _val, _clr in [
+        (_ka, "SKUs",         str(_skus_com_est),         "#1a2f4a"),
+        (_kb, "Peças",        str(_total_pecas),           "#1a2f4a"),
+        (_kc, "Inventário",   _fmt_brl(_valor_inv),        "#c96ba0"),
+        (_kd, "Lucro est.",   _fmt_brl(_lucro_est),        "#059669"),
+        (_ke, "Em produção",  _fmt_brl(_valor_producao),   "#b8860b"),
     ]:
-        col.markdown(f"""
-        <div style="{_kpi_style}">
+        _col.markdown(f"""
+        <div style="{_kcard}">
           <div style="font-size:11px;font-weight:600;color:#9CA3AF;
-                      text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">
-            {label}
+                      text-transform:uppercase;letter-spacing:.05em;
+                      margin-bottom:6px;white-space:nowrap;overflow:hidden;
+                      text-overflow:ellipsis">{_lbl}</div>
+          <div style="font-size:clamp(18px,2.2vw,26px);font-weight:800;
+                      color:{_clr};white-space:nowrap;line-height:1.1">
+            {_val}
           </div>
-          <div style="font-size:22px;font-weight:800;color:{color}">{value}</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
