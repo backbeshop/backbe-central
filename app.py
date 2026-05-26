@@ -438,7 +438,6 @@ _NAV = [
         ("≋ Tecidos",            "Tecidos"),
         ("⊕ Aviamentos",         "Aviamentos"),
         ("⊞ Ordens de Producao", "Ordens de Producao"),
-        ("✂ Corte Vo Marcia",    "Corte Vo Marcia"),
     ]),
     ("FINANCEIRO", [
         ("▣ Financeiro",         "Financeiro"),
@@ -4202,6 +4201,18 @@ elif pagina == "◉ Relatorio Mae":
         k3.metric("Total a pagar", f"R${rel['total_pagar']:.2f}",
                   delta="✅ PAGO" if rel["pago"] else "⏳ Pendente")
 
+        # ── Corte Vó Marcia do mesmo mês ──────────────────────────────────────
+        _corte_row = row_to_dict(conn.execute(
+            "SELECT * FROM relatorio_corte WHERE mes=? AND ano=?", (mes_r, ano_r)
+        ).fetchone() or {})
+        _total_corte_m = float(_corte_row.get("total_corte") or 0)
+        _pecas_corte_m = int(_corte_row.get("total_pecas") or 0)
+        if _total_corte_m > 0:
+            kc1, kc2, kc3 = st.columns(3)
+            kc1.metric("✂ Peças cortadas", _pecas_corte_m)
+            kc2.metric("✂ Corte (Vó Marcia)", f"R${_total_corte_m:.2f}")
+            kc3.metric("Costura + Corte", f"R${float(rel['total_costura']) + _total_corte_m:.2f}")
+
         st.divider()
         col_res1, col_res2 = st.columns([2, 1])
         with col_res1:
@@ -4298,18 +4309,25 @@ elif pagina == "◉ Relatorio Mae":
         if not hist:
             st.info("Sem histórico ainda.")
         else:
+            # Junta dados de corte para exibir junto
+            _cortes_map = {(r["mes"], r["ano"]): float(r["total_corte"] or 0)
+                           for r in rows_to_list(conn.execute(
+                               "SELECT mes, ano, total_corte FROM relatorio_corte"
+                           ).fetchall())}
             df_h = pd.DataFrame([{
                 "Mês/Ano": f"{MESES_R[h['mes']-1]}/{h['ano']}",
                 "Peças": h["total_pecas"],
                 "Costura R$": h["total_costura"],
+                "Corte (Vó) R$": _cortes_map.get((h["mes"], h["ano"]), 0),
                 "Comissão R$": h["comissao_valor"],
-                "Total R$": h["total_pagar"],
+                "Total Costura R$": h["total_pagar"],
                 "Status": "✅ Pago" if h["pago"] else "⏳ Pendente",
             } for h in hist])
             st.dataframe(df_h, use_container_width=True, hide_index=True)
-            c_p, c_pen = st.columns(2)
-            c_p.metric("Total pago", f"R${sum(h['total_pagar'] for h in hist if h['pago']):.2f}")
+            c_p, c_pen, c_corte = st.columns(3)
+            c_p.metric("Total costura pago", f"R${sum(h['total_pagar'] for h in hist if h['pago']):.2f}")
             c_pen.metric("Total pendente", f"R${sum(h['total_pagar'] for h in hist if not h['pago']):.2f}")
+            c_corte.metric("Total corte (Vó)", f"R${sum(_cortes_map.values()):.2f}")
 
     conn.close()
 
