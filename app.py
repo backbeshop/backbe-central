@@ -2793,8 +2793,24 @@ elif pagina == "▦ Produtos":
                 "Obs": p.get("observacoes") or "",
             } for p in prods_show])
 
+            # ── Cores pastel por coleção ──────────────────────────────────
+            _COLL_PALETTES = [
+                "#FFF0F6", "#EFF6FF", "#FFFBEB", "#F5F3FF", "#ECFDF5",
+                "#FFF7ED", "#F0F9FF", "#FDF4FF", "#F7FEE7", "#FEF2F2",
+                "#F0FDFA", "#FFFDE7", "#EDE9FE", "#E0F2FE", "#FCE7F3",
+            ]
+            _coll_list = sorted(df_prod["Coleção"].unique().tolist())
+            _coll_map = {c: _COLL_PALETTES[i % len(_COLL_PALETTES)]
+                         for i, c in enumerate(_coll_list)}
+
+            def _row_bg(row):
+                bg = _coll_map.get(row["Coleção"], "#FFFFFF")
+                return [f"background-color:{bg}" for _ in row]
+
+            styled_prod = df_prod.style.apply(_row_bg, axis=1)
+
             edited_p = st.data_editor(
-                df_prod,
+                styled_prod,
                 use_container_width=True,
                 hide_index=True,
                 height=min(40 + 36 * len(df_prod), 5000),  # dinâmico — a página rola, não a tabela
