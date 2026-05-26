@@ -77,65 +77,81 @@ html, body, [class*="css"], .stApp, button, input, select, textarea {{
 section[data-testid="stSidebar"] > div:first-child,
 section[data-testid="stSidebar"],
 div[data-testid="stSidebarContent"] {{
-    background: rgba(255,255,255,0.78) !important;
+    background: rgba(255,255,255,0.82) !important;
     backdrop-filter: blur(24px) !important;
     -webkit-backdrop-filter: blur(24px) !important;
     border-right: 1px solid rgba(201,107,160,0.10) !important;
 }}
-section[data-testid="stSidebar"] [data-testid="stWidgetLabel"],
-div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] {{
-    display: none !important;
+
+/* ── Nav item label (seção) ─────────────────────────────────── */
+.nav-section-label {{
+    font-size: 9px; font-weight: 700; color: #C9D0D8;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    padding: 0 10px; margin: 12px 0 3px 0;
 }}
-section[data-testid="stSidebar"] [data-baseweb="radio"] > div:first-child,
-div[data-testid="stSidebarContent"] [data-baseweb="radio"] > div:first-child {{
-    display: none !important;
+
+/* ── Nav item ativo (div) ───────────────────────────────────── */
+.nav-active {{
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px 8px 11px;
+    background: linear-gradient(90deg, #FDF2F8, #fff8fb);
+    border-radius: 10px;
+    border-left: 3px solid {PINK};
+    margin: 1px 0;
+    cursor: default;
 }}
-section[data-testid="stSidebar"] [data-baseweb="radio-group"],
-div[data-testid="stSidebarContent"] [data-baseweb="radio-group"] {{
-    gap: 2px !important; display: flex !important; flex-direction: column !important;
-}}
-section[data-testid="stSidebar"] [data-baseweb="radio"] label,
-div[data-testid="stSidebarContent"] [data-baseweb="radio"] label {{
-    width: 100% !important;
-    padding: 10px 14px !important;
-    border-radius: 10px !important;
-    font-size: 13.5px !important;
-    font-weight: 500 !important;
-    color: #6B7280 !important;
-    cursor: pointer !important;
-    transition: all 0.14s ease !important;
-    display: flex !important;
-    align-items: center !important;
-    margin: 0 !important;
-    letter-spacing: -0.01em !important;
-}}
-section[data-testid="stSidebar"] [data-baseweb="radio"] label:hover,
-div[data-testid="stSidebarContent"] [data-baseweb="radio"] label:hover {{
-    background: #FDF2F8 !important;
-    color: {PINK} !important;
-}}
-section[data-testid="stSidebar"] [data-baseweb="radio"] label:has(input:checked),
-div[data-testid="stSidebarContent"] [data-baseweb="radio"] label:has(input:checked) {{
-    background: #FDF2F8 !important;
-    color: {PINK} !important;
-    font-weight: 700 !important;
-}}
-section[data-testid="stSidebar"] [data-baseweb="radio"] input,
-div[data-testid="stSidebarContent"] [data-baseweb="radio"] input {{
-    position: absolute !important; opacity: 0 !important;
-    width: 0 !important; height: 0 !important;
+.nav-active .ni {{ font-size: 15px; width: 22px; text-align:center; flex-shrink:0; }}
+.nav-active .nl {{ font-size: 13px; font-weight: 700; color: {PINK}; letter-spacing:-0.01em; }}
+
+/* ── Botões nav (inativos) ──────────────────────────────────── */
+section[data-testid="stSidebar"] .stButton,
+div[data-testid="stSidebarContent"] .stButton {{
+    margin: 1px 0 !important;
 }}
 section[data-testid="stSidebar"] .stButton > button,
 div[data-testid="stSidebarContent"] .stButton > button {{
-    background: #FDF2F8 !important;
-    border: 1px solid #F9D2E9 !important;
-    color: {PINK} !important;
-    border-radius: 8px !important;
-    font-size: 12.5px !important;
-    font-weight: 600 !important;
+    background: transparent !important;
+    border: 0 !important;
+    color: #6B7280 !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+    padding: 8px 10px 8px 14px !important;
+    letter-spacing: -0.01em !important;
+    width: 100% !important;
+    transition: all 0.13s ease !important;
 }}
 section[data-testid="stSidebar"] .stButton > button:hover,
 div[data-testid="stSidebarContent"] .stButton > button:hover {{
+    background: #FDF2F8 !important;
+    color: {PINK} !important;
+    transform: none !important;
+}}
+section[data-testid="stSidebar"] .stButton > button p,
+div[data-testid="stSidebarContent"] .stButton > button p {{
+    text-align: left !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+}}
+/* ── Botão de ação (Atualizar) ─────────────────────────────── */
+section[data-testid="stSidebar"] .stButton > button[data-testid="baseButton-primary"],
+div[data-testid="stSidebarContent"] .stButton > button[data-testid="baseButton-primary"] {{
+    background: #FDF2F8 !important;
+    border: 1px solid #F9D2E9 !important;
+    color: {PINK} !important;
+    border-radius: 9px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 9px 16px !important;
+    margin-top: 2px !important;
+}}
+section[data-testid="stSidebar"] .stButton > button[data-testid="baseButton-primary"]:hover,
+div[data-testid="stSidebarContent"] .stButton > button[data-testid="baseButton-primary"]:hover {{
     background: #FCE7F3 !important;
     border-color: {PINK} !important;
 }}
@@ -365,56 +381,86 @@ hr {{ border-color:#E8EAF0 !important; }}
 </style>
 """, unsafe_allow_html=True)
 
+# ── Navegação via session_state ───────────────────────────────────────────────
+if "pagina" not in st.session_state:
+    st.session_state["pagina"] = "◆ Dashboard"
+
+_NAV = [
+    ("VISAO GERAL", [
+        ("◆ Dashboard",          "📊", "Dashboard"),
+        ("▷ Calendario",         "📅", "Calendário"),
+    ]),
+    ("LOJA", [
+        ("▦ Produtos",           "👗", "Produtos"),
+        ("◎ CRM — Clientes",     "👥", "CRM — Clientes"),
+        ("↗ Crescimento",        "📈", "Crescimento"),
+    ]),
+    ("PRODUCAO", [
+        ("≋ Tecidos",            "🧵", "Tecidos"),
+        ("⊕ Aviamentos",         "🪡", "Aviamentos"),
+        ("⊞ Ordens de Producao", "🏭", "Ordens de Producao"),
+        ("◇ Calculadora CMV",    "🧮", "Calculadora CMV"),
+    ]),
+    ("FINANCEIRO", [
+        ("▣ Financeiro",         "💰", "Financeiro"),
+        ("◉ Relatorio Mae",      "🧾", "Relatorio Mae"),
+        ("⊛ Declaracao MEI",     "📄", "Declaracao MEI"),
+    ]),
+]
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
+    # Logo
     st.markdown(f"""
-<div style="padding:10px 4px 20px 4px">
+<div style="padding:10px 4px 18px 4px">
   <div style="display:flex;align-items:center;gap:10px">
-    <div style="width:40px;height:40px;
+    <div style="width:38px;height:38px;
                 background:linear-gradient(135deg,{PINK},{GOLD});
-                border-radius:12px;display:flex;align-items:center;
+                border-radius:11px;display:flex;align-items:center;
                 justify-content:center;flex-shrink:0;
-                box-shadow:0 4px 14px rgba(201,107,160,0.30)">
-      <span style="font-size:18px;color:white;font-weight:900">B</span>
+                box-shadow:0 4px 14px rgba(201,107,160,0.28)">
+      <span style="font-size:17px;color:white;font-weight:900">B</span>
     </div>
     <div>
-      <div style="font-size:18px;font-weight:800;color:{NAVY};
+      <div style="font-size:17px;font-weight:800;color:{NAVY};
                   letter-spacing:-0.5px;line-height:1.1">Backbe</div>
-      <div style="font-size:9px;color:#9CA3AF;font-weight:700;
+      <div style="font-size:9px;color:#B0B8C4;font-weight:700;
                   text-transform:uppercase;letter-spacing:0.18em;margin-top:1px">CENTRAL</div>
     </div>
   </div>
-</div>
-<div style="font-size:9.5px;font-weight:700;color:#D1D5DB;
-            text-transform:uppercase;letter-spacing:0.14em;
-            padding:0 6px;margin-bottom:5px">Visao Geral</div>
-""", unsafe_allow_html=True)
-    pagina = st.radio("nav", [
-        "◆ Dashboard",
-        "▷ Calendario",
-        "▦ Produtos",
-        "◎ CRM — Clientes",
-        "≋ Tecidos",
-        "⊕ Aviamentos",
-        "⊞ Ordens de Producao",
-        "◇ Calculadora CMV",
-        "▣ Financeiro",
-        "↗ Crescimento",
-        "◉ Relatorio Mae",
-        "⊛ Declaracao MEI",
-    ], label_visibility="collapsed")
+</div>""", unsafe_allow_html=True)
+
+    # Navegação agrupada
+    for _sec, _items in _NAV:
+        st.markdown(f'<div class="nav-section-label">{_sec}</div>',
+                    unsafe_allow_html=True)
+        for _key, _icon, _label in _items:
+            if st.session_state["pagina"] == _key:
+                st.markdown(f"""<div class="nav-active">
+  <span class="ni">{_icon}</span>
+  <span class="nl">{_label}</span>
+</div>""", unsafe_allow_html=True)
+            else:
+                if st.button(f"{_icon}  {_label}", key=f"_nav_{_key}",
+                             use_container_width=True):
+                    st.session_state["pagina"] = _key
+                    st.rerun()
+
+    # Configurações
     st.markdown("""
-<div style="height:1px;background:#F3F4F6;margin:12px 0 10px 0"></div>
-<div style="font-size:9.5px;font-weight:700;color:#D1D5DB;
-            text-transform:uppercase;letter-spacing:0.14em;
-            padding:0 6px;margin-bottom:5px">Configuracoes</div>
+<div style="height:1px;background:#F0F2F5;margin:14px 0 4px 0"></div>
+<div class="nav-section-label">CONFIGURACOES</div>
 """, unsafe_allow_html=True)
-    if st.button("↺  Atualizar Nuvemshop", use_container_width=True):
+    if st.button("↺  Atualizar Nuvemshop", use_container_width=True,
+                 type="primary", key="_btn_update_ns"):
         st.cache_data.clear()
         st.rerun()
-    st.markdown("""<div style="font-size:11px;color:#9CA3AF;
-                               text-align:center;margin-top:6px">dados atualizados a cada 1h</div>""",
+    st.markdown("""<div style="font-size:10.5px;color:#B0B8C4;
+                               text-align:center;margin-top:8px">
+                   dados atualizados a cada 1h</div>""",
                 unsafe_allow_html=True)
+
+pagina = st.session_state["pagina"]
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 @st.cache_data(ttl=3600, show_spinner="Buscando pedidos na Nuvemshop...")
