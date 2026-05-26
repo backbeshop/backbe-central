@@ -68,7 +68,7 @@ html, body, [class*="css"], .stApp, button, input, select, textarea {{
 }}
 .stApp {{ background: #F4F6FB !important; }}
 .main .block-container {{
-    padding: 1.8rem 2.2rem 3rem !important;
+    padding: 1.4rem 1.6rem 3rem !important;
     background: #F4F6FB !important;
     max-width: 1440px;
 }}
@@ -324,12 +324,66 @@ hr {{ border-color:#E8EAF0 !important; }}
     box-shadow: 0 0 0 3px rgba(201,107,160,0.15) !important;
 }}
 
-/* ── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 768px) {{
-  .main .block-container {{ padding: 0.8rem 0.8rem 2rem !important; }}
-  .kcard {{ min-height: 110px; padding: 16px 18px 14px; }}
-  .kcard-val {{ font-size: 26px; }}
-  .wcard {{ padding: 16px 16px; }}
+/* ── Responsive — Tablet (≤ 960px) ─────────────────────────── */
+@media (max-width: 960px) {{
+  /* Colunas em grade 2×2 */
+  [data-testid="stHorizontalBlock"] {{
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }}
+  [data-testid="stColumn"] {{
+    flex: 0 0 calc(50% - 6px) !important;
+    width: calc(50% - 6px) !important;
+    min-width: calc(50% - 6px) !important;
+    max-width: calc(50% - 6px) !important;
+    box-sizing: border-box !important;
+  }}
+  .main .block-container {{ padding: 1rem 1rem 2.5rem !important; max-width: 100% !important; }}
+  .kcard {{ padding: 16px 18px 14px; }}
+  .kcard-val {{ font-size: 28px !important; }}
+  .wcard {{ padding: 18px 18px; }}
+  .kpi-value {{ font-size: 28px !important; }}
+  /* Header empilha quando estreita */
+  [data-testid="stMarkdownContainer"] > div[style*="justify-content:space-between"] {{
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }}
+}}
+
+/* ── Responsive — Mobile (≤ 600px) ─────────────────────────── */
+@media (max-width: 600px) {{
+  /* Coluna única */
+  [data-testid="stColumn"] {{
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }}
+  .main .block-container {{ padding: 0.5rem 0.5rem 2rem !important; }}
+  .kcard {{
+    padding: 14px 16px 12px !important;
+    min-height: 96px !important;
+    border-radius: 16px !important;
+  }}
+  .kcard-val {{ font-size: 24px !important; letter-spacing: -1px !important; }}
+  .kcard-label {{ font-size: 10px !important; }}
+  .kcard-sub {{ font-size: 11px !important; margin-top: 6px !important; }}
+  .kcard-delta {{ font-size: 10px !important; padding: 2px 8px !important; }}
+  .wcard {{ padding: 14px 14px !important; border-radius: 16px !important; }}
+  .wcard-title {{ font-size: 13px !important; }}
+  .kpi-value {{ font-size: 24px !important; }}
+  /* Tabs compactas */
+  .stTabs [data-baseweb="tab"] {{
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+  }}
+  /* Títulos menores */
+  h1 {{ font-size: 18px !important; }}
+  /* Goal bar label menor */
+  .goal-bar-header {{ font-size: 10px !important; }}
+  /* Métricas */
+  [data-testid="stMetricValue"] {{ font-size: 22px !important; }}
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -520,13 +574,13 @@ if pagina == "◆ Dashboard":
     hora = hoje.hour
     saudacao = "Bom dia" if hora < 12 else ("Boa tarde" if hora < 18 else "Boa noite")
     st.markdown(f"""
-<div style="display:flex;justify-content:space-between;align-items:center;
-            margin-bottom:28px;flex-wrap:wrap;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;
+            margin-bottom:24px;flex-wrap:wrap;gap:12px">
   <div>
     <div style="font-size:13px;color:#6B7280;font-weight:500;margin-bottom:3px">
       {saudacao}, <strong style="color:{NAVY}">Isabela</strong>
     </div>
-    <div style="font-size:26px;font-weight:800;color:{NAVY};
+    <div style="font-size:clamp(18px,3vw,26px);font-weight:800;color:{NAVY};
                 letter-spacing:-0.8px;line-height:1.15">
       Visao Geral do Negocio
     </div>
@@ -536,15 +590,15 @@ if pagina == "◆ Dashboard":
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);
-                padding:8px 16px;display:flex;align-items:center;gap:8px">
-      <div style="width:8px;height:8px;background:#10B981;border-radius:50%"></div>
+                padding:7px 14px;display:flex;align-items:center;gap:7px;white-space:nowrap">
+      <div style="width:8px;height:8px;background:#10B981;border-radius:50%;flex-shrink:0"></div>
       <span style="font-size:12px;color:#374151;font-weight:600">Nuvemshop conectada</span>
     </div>
     <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);
-                padding:8px 16px">
+                padding:7px 14px;white-space:nowrap">
       <span style="font-size:12px;color:#374151;font-weight:600">
-        Meta do mes: <strong style="color:{PINK}">R${meta_fat:,.0f}</strong>
-        &nbsp;·&nbsp; Anual: <strong style="color:{GOLD}">R${fat_ano/1000:.1f}k / R${meta_fat_anual/1000:.0f}k</strong>
+        Meta: <strong style="color:{PINK}">R${meta_fat:,.0f}</strong>
+        &nbsp;·&nbsp; Anual: <strong style="color:{GOLD}">R${fat_ano/1000:.1f}k&thinsp;/&thinsp;R${meta_fat_anual/1000:.0f}k</strong>
         &nbsp;<span style="color:#6B7280">({prog_anual:.0f}%)</span>
       </span>
     </div>
