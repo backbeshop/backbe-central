@@ -4202,9 +4202,10 @@ elif pagina == "◉ Relatorio Mae":
                   delta="✅ PAGO" if rel["pago"] else "⏳ Pendente")
 
         # ── Corte Vó Marcia do mesmo mês ──────────────────────────────────────
-        _corte_row = row_to_dict(conn.execute(
+        _corte_result = conn.execute(
             "SELECT * FROM relatorio_corte WHERE mes=? AND ano=?", (mes_r, ano_r)
-        ).fetchone() or {})
+        ).fetchone()
+        _corte_row = dict(_corte_result) if _corte_result else {}
         _total_corte_m = float(_corte_row.get("total_corte") or 0)
         _pecas_corte_m = int(_corte_row.get("total_pecas") or 0)
         if _total_corte_m > 0:
