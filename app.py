@@ -4023,8 +4023,8 @@ elif pagina == "◉ Relatorio Mae":
     ).fetchone())
     rel_id = rel["id"]
 
-    tab_pecas_r, tab_resumo_r, tab_hist_r = st.tabs([
-        "🧵 Peças Costuradas", "📊 Resumo do Mês", "📅 Histórico"
+    tab_pecas_r, tab_corte_r, tab_resumo_r, tab_hist_r = st.tabs([
+        "🧵 Peças Costuradas", "✂ Corte (Vó Marcia)", "📊 Resumo do Mês", "📅 Histórico"
     ])
 
     with tab_pecas_r:
@@ -4184,6 +4184,123 @@ elif pagina == "◉ Relatorio Mae":
                 st.rerun()
             else:
                 st.warning("Informe o nome do produto.")
+
+    with tab_corte_r:
+        st.subheader(f"✂ Corte — {MESES_R[mes_r-1]}/{ano_r}")
+
+        # Garante que o relatório de corte existe para este mês
+        conn.execute(
+            "INSERT OR IGNORE INTO relatorio_corte (mes, ano) VALUES (?,?)",
+            (mes_r, ano_r)
+        )
+        conn.commit()
+        rel_c = row_to_dict(conn.execute(
+            "SELECT * FROM relatorio_corte WHERE mes=? AND ano=?", (mes_r, ano_r)
+        ).fetchone())
+        rel_c_id = rel_c["id"]
+
+        itens_c = rows_to_list(conn.execute(
+            "SELECT * FROM relatorio_corte_itens WHERE relatorio_id=? ORDER BY id",
+            (rel_c_id,)
+        ).fetchall())
+
+        if not itens_c:
+            st.info("Nenhum item de corte neste mês. Adicione abaixo.")
+        else:
+            for ic in itens_c:
+                _ck = f"edit_corte_{ic['id']}"
+                cols_c = st.columns([3, 1, 1, 1, 1, 1])
+                if st.session_state.get(_ck):
+                    new_prod_c  = cols_c[0].text_input("Produto",   value=ic["produto"],              key=f"cp_{ic['id']}")
+                    new_qtd_c   = cols_c[1].number_input("Qtd",     value=int(ic["quantidade"]),      min_value=1, key=f"cq_{ic['id']}")
+                    new_val_c   = cols_c[2].number_input("Total R$", value=float(ic["valor_corte_total"]), min_value=0.0, step=0.5, key=f"cv_{ic['id']}")
+                    pela_vo_c   = cols_c[3].checkbox("Vó", value=bool(ic["feito_pela_vo"]),            key=f"cvo_{ic['id']}")
+                    if cols_c[4].button("💾", key=f"csave_{ic['id']}"):
+                        unit_c = round(new_val_c / new_qtd_c, 2) if new_qtd_c else 0
+                        conn.execute(
+                            "UPDATE relatorio_corte_itens SET produto=?, quantidade=?, "
+                            "valor_corte_total=?, valor_corte_unit=?, feito_pela_vo=? WHERE id=?",
+                            (new_prod_c, new_qtd_c, new_val_c, unit_c, 1 if pela_vo_c else 0, ic["id"])
+                        )
+                        # recalcula totais
+                        rows_c = conn.execute(
+                            "SELECT quantidade, valor_corte_total, feito_pela_vo "
+                            "FROM relatorio_corte_itens WHERE relatorio_id=?", (rel_c_id,)
+                        ).fetchall()
+                        conn.execute(
+                            "UPDATE relatorio_corte SET total_pecas=?, total_corte=? WHERE id=?",
+                            (sum(r[0] for r in rows_c if r[2]), sum(r[1] for r in rows_c if r[2]), rel_c_id)
+                        )
+                        conn.commit()
+                        st.session_state[_ck] = False
+                        st.rerun()
+                    if cols_c[5].button("✕", key=f"ccanc_{ic['id']}"):
+                        st.session_state[_ck] = False
+                        st.rerun()
+                else:
+                    vo_badge = "🟣 Vó" if ic["feito_pela_vo"] else "⚪ Outro"
+                    cols_c[0].markdown(f"**{ic['produto']}**")
+                    cols_c[1].markdown(f"{ic['quantidade']} pç")
+                    cols_c[2].markdown(f"R${ic['valor_corte_total']:.2f}")
+                    cols_c[3].markdown(vo_badge)
+                    if cols_c[4].button("✏️", key=f"cedit_{ic['id']}"):
+                        st.session_state[_ck] = True
+                        st.rerun()
+                    if cols_c[5].button("🗑️", key=f"cdel_{ic['id']}"):
+                        conn.execute("DELETE FROM relatorio_corte_itens WHERE id=?", (ic["id"],))
+                        rows_c = conn.execute(
+                            "SELECT quantidade, valor_corte_total, feito_pela_vo "
+                            "FROM relatorio_corte_itens WHERE relatorio_id=?", (rel_c_id,)
+                        ).fetchall()
+                        conn.execute(
+                            "UPDATE relatorio_corte SET total_pecas=?, total_corte=? WHERE id=?",
+                            (sum(r[0] for r in rows_c if r[2]), sum(r[1] for r in rows_c if r[2]), rel_c_id)
+                        )
+                        conn.commit()
+                        st.rerun()
+
+        # Totais
+        rel_c_up = row_to_dict(conn.execute(
+            "SELECT * FROM relatorio_corte WHERE id=?", (rel_c_id,)
+        ).fetchone())
+        st.divider()
+        ct1, ct2 = st.columns(2)
+        ct1.metric("Total peças cortadas (Vó)", rel_c_up["total_pecas"])
+        ct2.metric("Total corte R$", f"R${rel_c_up['total_corte']:.2f}")
+
+        # ── Adicionar item de corte ─────────────────────────────────────
+        with st.expander("➕ Adicionar item de corte"):
+            # autocomplete com nomes do catálogo de costura
+            _cat_names_c = [cp["categoria"] for cp in rows_to_list(
+                conn.execute("SELECT categoria FROM costura_precos ORDER BY categoria").fetchall()
+            )]
+            _prod_c = st.selectbox("Produto", ["(digitar nome)"] + _cat_names_c, key="c_prod_sel")
+            _nome_c = st.text_input("Nome do produto", value="" if _prod_c == "(digitar nome)" else _prod_c, key=f"c_nome_{_prod_c}")
+            _qtd_c  = st.number_input("Quantidade", min_value=1, value=1, key="c_qtd")
+            _val_c  = st.number_input("Valor total de corte (R$)", min_value=0.0, step=0.5, key="c_val")
+            _vo_c   = st.checkbox("Feito pela Vó Marcia", value=True, key="c_vo")
+            if st.button("Adicionar corte", key="c_add_btn"):
+                if _nome_c.strip():
+                    _unit_c = round(_val_c / _qtd_c, 2) if _qtd_c else 0
+                    conn.execute(
+                        "INSERT INTO relatorio_corte_itens "
+                        "(relatorio_id, produto, quantidade, valor_corte_total, valor_corte_unit, feito_pela_vo) "
+                        "VALUES (?,?,?,?,?,?)",
+                        (rel_c_id, _nome_c.strip(), _qtd_c, _val_c, _unit_c, 1 if _vo_c else 0)
+                    )
+                    rows_c2 = conn.execute(
+                        "SELECT quantidade, valor_corte_total, feito_pela_vo "
+                        "FROM relatorio_corte_itens WHERE relatorio_id=?", (rel_c_id,)
+                    ).fetchall()
+                    conn.execute(
+                        "UPDATE relatorio_corte SET total_pecas=?, total_corte=? WHERE id=?",
+                        (sum(r[0] for r in rows_c2 if r[2]), sum(r[1] for r in rows_c2 if r[2]), rel_c_id)
+                    )
+                    conn.commit()
+                    st.success("Adicionado!")
+                    st.rerun()
+                else:
+                    st.warning("Informe o nome do produto.")
 
     with tab_resumo_r:
         rel = row_to_dict(conn.execute(
