@@ -10,6 +10,7 @@ from pathlib import Path
 from db import init_db, get_conn, rows_to_list, row_to_dict
 from api_ns import (fetch_all_orders, fetch_all_customers, compute_sales,
                     compute_customers, fetch_all_products, parse_inventory)
+import api_tiktok
 from nubank_parser import parse_nubank_pdf
 from notion_api import get_week_content, notion_ok, PLATAFORMA_ICON
 from ics_export import build_ics, gcal_link
@@ -433,6 +434,7 @@ _NAV = [
         ("▦ Produtos",           "Produtos"),
         ("◎ CRM — Clientes",     "CRM — Clientes"),
         ("⊟ Estoque",            "Estoque"),
+        ("♪ TikTok Shop",        "TikTok Shop"),
     ]),
     ("PRODUCAO", [
         ("≋ Tecidos",            "Tecidos"),
@@ -3155,6 +3157,148 @@ elif pagina == "⊟ Estoque":
         st.warning(f"Não foi possível carregar vendas da semana: {_e_week}")
 
     conn.close()
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  PÁGINA — TIKTOK SHOP
+# ══════════════════════════════════════════════════════════════════════════════
+elif pagina == "♪ TikTok Shop":
+    st.title("TikTok Shop")
+    st.caption(
+        "Sincroniza o catálogo da Nuvemshop com o TikTok Shop: sobe produtos "
+        "novos e atualiza o estoque dos itens pronta entrega."
+    )
+
+    if not api_tiktok.tiktok_ok():
+        faltando = api_tiktok.missing_credentials()
+        st.warning("Conecte o TikTok Shop para usar esta página.")
+        st.markdown(f"""
+<div class="wcard" style="padding:18px 20px;line-height:1.6">
+  <div style="font-size:14px;font-weight:700;color:{NAVY};margin-bottom:8px">
+    Credenciais faltando
+  </div>
+  <div style="font-size:12.5px;color:#6B7280">
+    Adicione nos <b>Secrets</b> do Streamlit (ou no <code>.env</code>):
+    <ul style="margin:8px 0 0 0">
+      {''.join(f'<li><code>{c}</code></li>' for c in faltando)}
+    </ul>
+    <div style="margin-top:10px">
+      Como obter: TikTok Shop Partner Center → crie um app → autorize a loja
+      para gerar o <code>access_token</code> e o <code>shop_cipher</code>.
+      Veja o <code>.env.example</code> para o passo a passo.
+    </div>
+  </div>
+</div>""", unsafe_allow_html=True)
+        st.stop()
+
+    # ── Carrega catálogo e monta o plano (dry-run) ───────────────────────────
+    col_btn, col_info = st.columns([1, 3])
+    with col_btn:
+        if st.button("↺ Recalcular plano", type="primary",
+                     use_container_width=True, key="_tt_refresh"):
+            st.cache_data.clear()
+            st.rerun()
+
+    with st.spinner("Comparando Nuvemshop x TikTok Shop..."):
+        try:
+            _ns_prods = fetch_all_products()
+            _plan = api_tiktok.plan_sync(_ns_prods)
+            _tt_ok = True
+        except Exception as _e_tt:
+            _tt_ok = False
+            st.error(f"Erro ao consultar o TikTok Shop: {_e_tt}")
+
+    if _tt_ok:
+        _novos = _plan["novos"]
+        _atualizar = _plan["atualizar_estoque"]
+
+        # ── KPIs ─────────────────────────────────────────────────────────────
+        _kcard = (
+            "background:white;border-radius:14px;padding:16px 18px;"
+            "border:1.5px solid #F0F0F0;box-shadow:0 2px 10px rgba(0,0,0,.05);"
+            "min-width:0;overflow:hidden"
+        )
+        _k1, _k2, _k3, _k4 = st.columns(4, gap="medium")
+        for _col, _lbl, _val, _clr in [
+            (_k1, "Produtos no TikTok", str(_plan["total_tiktok"]), "#1a2f4a"),
+            (_k2, "Produtos Nuvemshop", str(_plan["total_ns"]),     "#1a2f4a"),
+            (_k3, "Novos p/ subir",     str(len(_novos)),            "#c96ba0"),
+            (_k4, "Estoque a atualizar", str(len(_atualizar)),       "#059669"),
+        ]:
+            _col.markdown(f"""
+            <div style="{_kcard}">
+              <div style="font-size:11px;font-weight:600;color:#9CA3AF;
+                          text-transform:uppercase;letter-spacing:.05em;
+                          margin-bottom:6px;white-space:nowrap;overflow:hidden;
+                          text-overflow:ellipsis">{_lbl}</div>
+              <div style="font-size:clamp(18px,2.2vw,26px);font-weight:800;
+                          color:{_clr};white-space:nowrap;line-height:1.1">
+                {_val}
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+
+        tab_novos, tab_estoque = st.tabs(
+            [f"🆕 Produtos novos ({len(_novos)})",
+             f"🔄 Estoque pronta entrega ({len(_atualizar)})"]
+        )
+
+        # ── Aba: produtos novos ──────────────────────────────────────────────
+        with tab_novos:
+            if not _novos:
+                st.success("Nenhum produto novo — o TikTok já está em dia. ✔")
+            else:
+                st.dataframe(
+                    pd.DataFrame([
+                        {"Produto": n["nome"], "Variantes": n["variantes"],
+                         "Estoque": n["estoque"],
+                         "Pronta entrega": "sim" if n["pronta_entrega"] else "não"}
+                        for n in _novos
+                    ]),
+                    use_container_width=True, hide_index=True,
+                )
+                _tem_cat = bool(api_tiktok.CATEGORY_ID)
+                if not _tem_cat:
+                    st.info(
+                        "Para criar produtos automaticamente, defina "
+                        "`TIKTOK_CATEGORY_ID` nos secrets (categoria padrão do "
+                        "TikTok Shop). Sem isso, os itens ficam listados aqui para "
+                        "cadastro manual."
+                    )
+                if st.button("⬆ Subir produtos novos no TikTok",
+                             type="primary", disabled=not _tem_cat,
+                             key="_tt_create"):
+                    with st.spinner("Criando produtos no TikTok Shop..."):
+                        _rep = api_tiktok.apply_new_products(_novos)
+                    st.dataframe(pd.DataFrame(_rep), use_container_width=True,
+                                 hide_index=True)
+                    st.cache_data.clear()
+
+        # ── Aba: estoque pronta entrega ──────────────────────────────────────
+        with tab_estoque:
+            if not _atualizar:
+                st.success("Nenhum estoque pronta entrega para atualizar. ✔")
+            else:
+                st.dataframe(
+                    pd.DataFrame([
+                        {"Produto": a["nome"], "Estoque Nuvemshop": a["estoque"]}
+                        for a in _atualizar
+                    ]),
+                    use_container_width=True, hide_index=True,
+                )
+                st.caption(
+                    "As quantidades da Nuvemshop serão escritas nos SKUs "
+                    "correspondentes do TikTok (casados pelo SKU)."
+                )
+                if st.button("🔄 Atualizar quantidades no TikTok",
+                             type="primary", key="_tt_stock"):
+                    with st.spinner("Atualizando estoque no TikTok Shop..."):
+                        _rep = api_tiktok.apply_inventory_sync(_atualizar)
+                    _df_rep = pd.DataFrame(_rep)
+                    st.dataframe(_df_rep, use_container_width=True, hide_index=True)
+                    _ok = sum(1 for r in _rep if r["status"] == "ok")
+                    st.success(f"{_ok} de {len(_rep)} produto(s) atualizado(s).")
+                    st.cache_data.clear()
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  PÁGINA — PRODUTOS
